@@ -1,0 +1,240 @@
+/* Error message styling */
+.slds-theme_error {
+  background-color: #fef5f1;
+  border: 1px solid #ea001e;
+  border-radius: 0.25rem;
+  padding: 1rem;
+}
+
+.slds-theme_error .slds-text-heading_small {
+  color: #ea001e;
+  display: flex;
+  align-items: center;
+}
+
+.slds-theme_error .slds-text-body_regular {
+  color: #080707;
+}
+
+.slds-theme_error lightning-icon {
+  --slds-c-icon-color-foreground-default: #ea001e;
+}
+
+/* Standard spacing between form elements to match Salesforce page layouts */
+.slds-form-element {
+  margin-bottom: 1rem;
+}
+
+/* Standard section title spacing */
+.slds-section__title {
+  margin-bottom: 0.5rem;
+}
+
+/* Section content padding */
+.slds-section__content {
+  padding-top: 0.5rem;
+}
+
+/* Add spacing between sections */
+section.slds-section:not(:first-child) {
+  margin-top: 1.5rem;
+}
+
+/* Column padding for proper field separation */
+.slds-col {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+/* Override the small padding to match standard layouts */
+.slds-col.slds-p-horizontal_small {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Standard padding on form elements */
+.slds-form-element__control {
+  padding-top: 0.125rem;
+}
+
+/* Proper spacing for stacked form elements */
+.slds-form-element_stacked .slds-form-element__label {
+  margin-bottom: 0.25rem;
+}
+
+/* Standard output field spacing */
+lightning-output-field {
+  --sds-c-outputfield-spacing-block-start: 0;
+  --sds-c-outputfield-spacing-block-end: 0;
+}
+
+/* Additional spacing for better visual separation */
+.slds-form-element_readonly {
+  margin-bottom: 1.25rem;
+}
+
+/* Ensure last form element in a column doesn't have extra bottom margin */
+.slds-col > .slds-form-element:last-child {
+  margin-bottom: 0.5rem;
+}
+
+/* Blank space elements should maintain consistent height */
+.slds-form-element[style*="height: 2rem"] {
+  margin-bottom: 1.75rem;
+}
+
+/* Adjust the overall card padding */
+lightning-card {
+  --sds-c-card-body-spacing-block-start: 1rem;
+  --sds-c-card-body-spacing-block-end: 1rem;
+  --sds-c-card-body-spacing-inline-start: 1rem;
+  --sds-c-card-body-spacing-inline-end: 1rem;
+}
+
+/* Ensure consistent field heights */
+.slds-form-element_readonly {
+  min-height: 2rem;
+}
+
+/* Remove bottom border that was adding extra space */
+.slds-border_bottom {
+  border-bottom: none;
+}
+
+/* Standard gutters for proper grid spacing */
+.slds-gutters {
+  margin: -0.75rem;
+}
+
+.slds-gutters > .slds-col {
+  padding: 0.75rem;
+}
+
+/* Edit button alignment with field values */
+.slds-form-element_edit .slds-form-element__static_edit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slds-form-element_edit .slds-form-element__static_edit lightning-button-icon {
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Conditional formatting styles */
+/* Additional text colors beyond SLDS standard */
+.slds-text-color_blue {
+  color: #0070d2;
+}
+
+.slds-text-color_purple {
+  color: #9050e9;
+}
+
+.slds-text-color_yellow {
+  color: #ffb75d;
+}
+
+/* Text decoration styles */
+.slds-text-underline {
+  text-decoration: underline;
+}
+
+.slds-text-line-through {
+  text-decoration: line-through;
+}
+
+/* Font styles */
+.slds-text-italic {
+  font-style: italic;
+}
+
+/* Border styles for fields with conditional formatting */
+.slds-border-success {
+  border: 2px solid #4bca81;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.slds-border-error {
+  border: 2px solid #ea001e;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.slds-border-warning {
+  border: 2px solid #ff9a3c;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* Icon colors for conditional formatting */
+.slds-icon-text-orange {
+  color: #ff9a3c !important;
+  fill: #ff9a3c !important;
+}
+
+.slds-icon-text-blue {
+  color: #0070d2 !important;
+  fill: #0070d2 !important;
+}
+
+.slds-icon-text-purple {
+  color: #9050e9 !important;
+  fill: #9050e9 !important;
+}
+
+.slds-icon-text-green {
+  color: #4bca81 !important;
+  fill: #4bca81 !important;
+}
+
+/* Ensure icons are visible and properly sized */
+lightning-icon.slds-m-left_x-small {
+  display: inline-block !important;
+  vertical-align: middle;
+  margin-left: 0.25rem !important;
+}
+
+lightning-icon svg {
+  width: 1rem !important;
+  height: 1rem !important;
+  display: block !important;
+}
+
+/* Target the SVG use element and path for fill color */
+lightning-icon.slds-icon-text-orange svg use,
+lightning-icon.slds-icon-text-orange svg path {
+  fill: #ff9a3c !important;
+}
+
+lightning-icon.slds-icon-text-blue svg use,
+lightning-icon.slds-icon-text-blue svg path {
+  fill: #0070d2 !important;
+}
+
+lightning-icon.slds-icon-text-purple svg use,
+lightning-icon.slds-icon-text-purple svg path {
+  fill: #9050e9 !important;
+}
+
+lightning-icon.slds-icon-text-green svg use,
+lightning-icon.slds-icon-text-green svg path {
+  fill: #4bca81 !important;
+}
+
+/* Force icon visibility */
+span.slds-m-left_x-small lightning-icon {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Alternative approach - target icon container directly */
+.slds-icon-text-orange,
+.slds-icon-text-blue,
+.slds-icon-text-purple,
+.slds-icon-text-green {
+  --slds-c-icon-color-foreground: currentColor !important;
+  --slds-c-icon-color-foreground-default: currentColor !important;
+}

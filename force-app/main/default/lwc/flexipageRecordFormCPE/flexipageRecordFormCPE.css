@@ -1,0 +1,425 @@
+/* Custom Property Editor Styles */
+.slds-form {
+  background-color: var(--lwc-colorBackgroundAlt);
+}
+
+.slds-box {
+  background-color: var(--lwc-colorBackground);
+  border: 1px solid var(--lwc-colorBorder);
+}
+
+/* Modal styles */
+.slds-modal__content {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1rem !important;
+  background-color: var(--lwc-colorBackground, #ffffff);
+}
+
+/* Large modal for Excluded Fields */
+.slds-modal_large {
+  width: 90%;
+  max-width: 70rem;
+  margin: 0 auto;
+}
+
+/* Large modal container */
+.slds-modal_large .slds-modal__container {
+  max-width: 70rem;
+}
+
+/* Ensure the modal backdrop covers the entire viewport */
+.slds-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(43, 40, 38, 0.4);
+  z-index: 9000;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.slds-backdrop_open {
+  opacity: 1;
+}
+
+/* Modal positioning */
+.slds-modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.1s linear;
+}
+
+.slds-modal.slds-fade-in-open {
+  opacity: 1;
+}
+
+/* Modal container styling */
+.slds-modal__container {
+  position: relative;
+  background-color: var(--lwc-colorBackground, #ffffff);
+  border-radius: 0.5rem;
+  box-shadow: 0 24px 48px 0 rgba(0, 0, 0, 0.16);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  width: 90%;
+  max-width: 40rem;
+  margin: 0 auto;
+  transform: scale(0.9);
+  transition: transform 0.1s linear;
+}
+
+.slds-fade-in-open .slds-modal__container {
+  transform: scale(1);
+}
+
+/* Modal header styling */
+.slds-modal__header {
+  position: relative;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--lwc-colorBorder, #e5e5e5);
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.75rem 1rem;
+  background-color: var(--lwc-colorBackground, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Modal title */
+.slds-modal__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--lwc-colorTextDefault, #080707);
+  margin: 0;
+  flex-grow: 1;
+  padding-right: 2rem;
+}
+
+/* Modal close button positioning */
+.slds-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.slds-modal__close:hover {
+  background-color: var(--lwc-colorBackgroundButtonDefaultHover, #f3f2f2);
+}
+
+.slds-modal__close:focus {
+  outline: 0;
+  box-shadow: 0 0 3px var(--lwc-colorBrand, #0176d3);
+}
+
+/* Modal footer styling */
+.slds-modal__footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--lwc-colorBorder, #e5e5e5);
+  border-radius: 0 0 0.5rem 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--lwc-colorBackground, #ffffff);
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Button spacing in modal footer */
+.slds-modal__footer lightning-button {
+  margin-left: 0.5rem;
+}
+
+/* Loading spinner positioning */
+lightning-spinner {
+  position: relative;
+}
+
+/* Advanced settings icon animation */
+lightning-button-icon {
+  transition: transform 0.2s ease;
+}
+
+/* Field option styles */
+lightning-dual-listbox {
+  min-height: 200px;
+}
+
+/* Improve dual listbox appearance in modal */
+.slds-modal__content lightning-dual-listbox {
+  --slds-c-dualistbox-height: 400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Excluded fields count text */
+.slds-text-body_small {
+  color: var(--lwc-colorTextLabel);
+  font-size: 0.8125rem;
+}
+
+/* Default values modal specific styling */
+.slds-modal__content {
+  min-height: 200px;
+}
+
+/* Search input in modal */
+.slds-modal__content .slds-input[type="search"] {
+  background-color: var(--lwc-colorBackgroundInput, #ffffff);
+  border: 1px solid var(--lwc-colorBorderInput, #c9c9c9);
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  font-size: 0.875rem;
+  transition:
+    border-color 0.1s linear,
+    background-color 0.1s linear;
+}
+
+.slds-modal__content .slds-input[type="search"]:focus {
+  outline: 0;
+  border-color: var(--lwc-colorBorderInputActive, #0176d3);
+  background-color: var(--lwc-colorBackgroundInputActive, #ffffff);
+  box-shadow: 0 0 3px var(--lwc-colorBorderInputActive, #0176d3);
+}
+
+/* Default values modal inputs */
+.slds-modal__content lightning-input {
+  margin-bottom: var(--lwc-spacingSmall);
+}
+
+/* Combobox dropdown max height */
+lightning-combobox .slds-dropdown {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Individual fields section styling */
+.slds-modal__content .slds-section {
+  background-color: var(--lwc-colorBackground, #ffffff);
+  border: 1px solid var(--lwc-colorBorder, #e5e5e5);
+  border-radius: 0.25rem;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+/* Accordion styles */
+.slds-section,
+.slds-expandable-section {
+  border: 1px solid var(--lwc-colorBorder);
+  border-radius: 0.25rem;
+  margin-bottom: 0;
+}
+
+.slds-section__title {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+
+.slds-section__title-action {
+  padding: 0.75rem 1rem;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--lwc-colorTextDefault, #080707);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.slds-section__title-action:hover {
+  background-color: var(--lwc-colorBackgroundRowHover, #f3f2f2);
+}
+
+.slds-section__title-action:focus {
+  outline: 0;
+  box-shadow: inset 0 0 0 2px var(--lwc-colorBorderInputActive, #0176d3);
+}
+
+.slds-section__title-action-icon {
+  flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+  color: var(--lwc-colorTextIconDefault, #747474);
+}
+
+.slds-is-open .slds-section__title-action-icon {
+  transform: rotate(90deg);
+}
+
+.slds-section__content {
+  padding: 1rem;
+  border-top: 1px solid var(--lwc-colorBorder, #e5e5e5);
+  background-color: var(--lwc-colorBackgroundAlt, #f3f2f2);
+}
+
+.slds-section__content[aria-hidden="true"] {
+  display: none;
+}
+
+/* Default values modal specific styles */
+.slds-modal__content .slds-form-element {
+  margin-bottom: 0;
+}
+
+.slds-modal__content .slds-form-element__label {
+  font-weight: 600;
+  color: var(--lwc-colorTextLabel);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Reduce spacing between field inputs in modal */
+.slds-modal__content .slds-m-bottom_small {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Compact flow combobox in modal */
+.slds-modal__content c-fsc_flow-combobox {
+  --slds-c-input-spacing-vertical: 0.25rem;
+}
+
+/* Reduce input field heights in modal */
+.slds-modal__content lightning-input .slds-input {
+  min-height: 1.875rem;
+}
+
+/* Modal specific enhancements */
+.slds-modal__content h3 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--lwc-colorTextLabel, #3e3e3c);
+  text-transform: uppercase;
+  letter-spacing: 0.0625rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Field labels in modal */
+.slds-modal__content .slds-form-element__label {
+  display: flex;
+  align-items: center;
+  min-height: 1.5rem;
+}
+
+/* Input focus states */
+.slds-modal__content .slds-input:focus,
+.slds-modal__content .slds-textarea:focus,
+.slds-modal__content .slds-select:focus {
+  outline: 0;
+  border-color: var(--lwc-colorBorderInputActive, #0176d3);
+  background-color: var(--lwc-colorBackgroundInputActive, #ffffff);
+  box-shadow: 0 0 3px var(--lwc-colorBorderInputActive, #0176d3);
+}
+
+/* Modal header icon alignment */
+.slds-modal__header .slds-media {
+  align-items: center;
+}
+
+.slds-modal__header .slds-media__figure {
+  margin-right: 0.75rem;
+}
+
+/* Modal content scrollbar styling */
+.slds-modal__content::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.slds-modal__content::-webkit-scrollbar-track {
+  background: var(--lwc-colorBackgroundAlt, #f3f2f2);
+}
+
+.slds-modal__content::-webkit-scrollbar-thumb {
+  background: var(--lwc-colorBorder, #c9c9c9);
+  border-radius: 0.25rem;
+}
+
+.slds-modal__content::-webkit-scrollbar-thumb:hover {
+  background: var(--lwc-colorBorderActive, #969492);
+}
+
+/* Flow combobox in modal */
+.slds-modal__content c-fsc_flow-combobox {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* Field help text in modal */
+.slds-modal__content .slds-form-element__help {
+  font-size: 0.75rem;
+  color: var(--lwc-colorTextWeak, #3e3e3c);
+  margin-top: 0.125rem;
+}
+
+/* Improve button styling in modal */
+.slds-modal__footer lightning-button + lightning-button {
+  margin-left: 0.5rem;
+}
+
+/* Hover effect for interactive elements in modal */
+.slds-modal__content .slds-button:hover,
+.slds-modal__content .slds-checkbox__label:hover {
+  cursor: pointer;
+}
+
+/* Separator line styling */
+.slds-modal__content hr {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid var(--lwc-colorBorder, #e5e5e5);
+}
+
+/* Loading spinner overlay in modal */
+.slds-modal__content .slds-is-relative {
+  position: relative;
+}
+
+.slds-modal__content lightning-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* CPE Footer Badge */
+.cpe-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0.5rem 0.5rem;
+  border-top: 1px solid var(--lwc-colorBorder, #e5e5e5);
+  margin-top: 0.75rem;
+}
+
+.cpe-footer-badge {
+  max-width: 200px;
+  height: auto;
+  opacity: 1;
+}

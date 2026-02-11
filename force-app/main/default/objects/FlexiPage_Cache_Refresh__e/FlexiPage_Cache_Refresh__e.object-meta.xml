@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Platform event for FlexiPage cache refresh and invalidation operations</description>
+    <eventType>HighVolume</eventType>
+    <label>FlexiPage Cache Refresh</label>
+    <pluralLabel>FlexiPage Cache Refreshes</pluralLabel>
+    <publishBehavior>PublishAfterCommit</publishBehavior>
+</CustomObject>

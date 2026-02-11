@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RemoteSiteSetting xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SelfDomain</fullName>
+    <description>Allows Tooling API callouts to this org for FlexiPage metadata retrieval using the current user session.</description>
+    <disableProtocolSecurity>false</disableProtocolSecurity>
+    <isActive>true</isActive>
+    <url>https://momentum-flow-6222.my.salesforce.com</url>
+</RemoteSiteSetting>

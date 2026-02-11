@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+	<types>
+		<members>FlexiPageCacheService</members>
+		<members>FlexiPageCacheServiceTest</members>
+		<members>FlexiPageMetadataService</members>
+		<members>FlexiPageMetadataServiceTest</members>
+		<members>FlexiPageToolingService</members>
+		<members>FlexiPageToolingServiceTest</members>
+		<members>MetadataService</members>
+		<members>MetadataServiceTest</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>flexipageRecordForm</members>
+		<members>flexipageRecordFormCPE</members>
+		<members>flexipageRecordFormConfig</members>
+		<members>flexiPageRecordForm</members>
+		<members>flexiPageRecordFormPropertyEditor</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<version>65.0</version>
+</Package>

@@ -1,0 +1,395 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 08-02-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+  <div class="slds-form slds-form_stacked">
+    <div class="slds-p-around_small">
+      <h3 class="slds-text-heading_small slds-m-bottom_small">
+        FlexiPage Record Form Configuration
+      </h3>
+
+      <!-- Object Selection -->
+      <lightning-combobox
+        label="Object"
+        value={objectApiName}
+        options={objectOptions}
+        placeholder="Select an Object"
+        field-level-help="Select the Salesforce object for this component"
+        required
+        onchange={handleObjectChange}
+        class="slds-m-bottom_small"
+      >
+      </lightning-combobox>
+
+      <!-- FlexiPage Selection -->
+      <lightning-input
+        label="FlexiPage Developer Name"
+        value={selectedFlexiPage}
+        placeholder="Enter FlexiPage developer name (e.g., Account_Record_Page)"
+        field-level-help="Enter the developer name of the FlexiPage layout to use for this record"
+        required
+        disabled={isFlexiPageDisabled}
+        onchange={handleFlexiPageChange}
+        class="slds-m-bottom_small"
+      >
+      </lightning-input>
+
+      <!-- Basic Settings -->
+      <div class="slds-box slds-m-bottom_small">
+        <h3 class="slds-text-heading_small slds-m-bottom_x-small">
+          Basic Settings
+        </h3>
+
+        <!-- Card Title -->
+        <lightning-input
+          label="Card Title"
+          value={cardTitle}
+          placeholder="Enter a title for the card"
+          field-level-help="Optional title to display at the top of the component"
+          onchange={handleCardTitleChange}
+          class="slds-m-bottom_x-small"
+        >
+        </lightning-input>
+
+        <!-- Show Icon -->
+        <lightning-input
+          type="checkbox"
+          label="Show Icon"
+          checked={showIcon}
+          field-level-help="Display the object icon in the card header"
+          onchange={handleShowIconChange}
+          class="slds-m-bottom_x-small"
+        >
+        </lightning-input>
+
+        <!-- Record ID -->
+        <div class="slds-form-element slds-m-bottom_x-small">
+          <c-fsc_flow-combobox
+            name="recordId"
+            label="Record ID"
+            value={recordId}
+            builder-context={builderContext}
+            automatic-output-variables={automaticOutputVariables}
+            onvaluechanged={handleRecordIdChange}
+            field-level-help="Enter a record ID directly or select a Flow variable"
+          >
+          </c-fsc_flow-combobox>
+        </div>
+
+        <!-- Read Only -->
+        <lightning-input
+          type="checkbox"
+          label="Read Only"
+          checked={isReadOnly}
+          field-level-help="Make the form read-only (no editing allowed)"
+          onchange={handleReadOnlyChange}
+          class="slds-m-bottom_x-small"
+        >
+        </lightning-input>
+      </div>
+
+      <!-- Advanced Settings -->
+      <div class="slds-box">
+        <div
+          class="slds-grid slds-grid_vertical-align-center slds-m-bottom_x-small"
+        >
+          <div class="slds-col">
+            <h3 class="slds-text-heading_small">Advanced Settings</h3>
+          </div>
+          <div class="slds-col_bump-left">
+            <lightning-button-icon
+              icon-name={advancedSettingsIcon}
+              alternative-text="Toggle Advanced Settings"
+              title="Toggle Advanced Settings"
+              variant="bare"
+              onclick={toggleAdvancedSettings}
+            >
+            </lightning-button-icon>
+          </div>
+        </div>
+
+        <template if:true={showAdvancedSettings}>
+          <!-- Excluded Fields -->
+          <div class="slds-m-bottom_x-small">
+            <label class="slds-form-element__label slds-text-title_bold"
+              >Excluded Fields</label
+            >
+            <div class="slds-form-element__help">
+              Select fields to exclude from the form
+            </div>
+            <lightning-button
+              label="Configure Excluded Fields"
+              variant="neutral"
+              onclick={openExcludedFieldsModal}
+              class="slds-m-top_x-small"
+            >
+            </lightning-button>
+            <template if:true={excludedFields.length}>
+              <div class="slds-m-top_x-small slds-text-body_small">
+                {excludedFieldsCount} fields excluded
+              </div>
+            </template>
+          </div>
+
+          <!-- Default Values -->
+          <div class="slds-m-bottom_x-small">
+            <label class="slds-form-element__label slds-text-title_bold"
+              >Default Values</label
+            >
+            <div class="slds-form-element__help">
+              Set default values for fields when creating new records
+            </div>
+            <lightning-button
+              label="Configure Default Values"
+              variant="neutral"
+              onclick={openDefaultValuesModal}
+              class="slds-m-top_x-small"
+            >
+            </lightning-button>
+          </div>
+
+          <!-- Divider -->
+          <hr class="slds-m-vertical_medium" />
+
+          <!-- Button Labels -->
+          <lightning-input
+            label="Save Button Label"
+            value={saveLabel}
+            placeholder="Save"
+            field-level-help="Custom label for the Save button"
+            onchange={handleSaveLabelChange}
+            class="slds-m-bottom_x-small"
+          >
+          </lightning-input>
+
+          <lightning-input
+            label="Cancel Button Label"
+            value={cancelLabel}
+            placeholder="Cancel"
+            field-level-help="Custom label for the Cancel button"
+            onchange={handleCancelLabelChange}
+            class="slds-m-bottom_x-small"
+          >
+          </lightning-input>
+        </template>
+      </div>
+    </div>
+
+    <!-- CPE Footer Badge -->
+    <div class="cpe-footer">
+      <img src={badgeUrl} alt="Kelley Austin - Now Part of Perficient" class="cpe-footer-badge" />
+    </div>
+  </div>
+
+  <!-- Default Values Modal -->
+  <template if:true={showDefaultValuesModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={closeDefaultValuesModal}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              alternative-text="close"
+              size="small"
+            ></lightning-icon>
+          </button>
+          <h2 class="slds-modal__title">Configure Default Values</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <!-- Record Variable Selector -->
+          <div class="slds-m-bottom_medium">
+            <c-fsc_flow-combobox
+              name="recordVariable"
+              label="Select Record Variable"
+              value={selectedRecordVariable}
+              builder-context={builderContext}
+              automatic-output-variables={automaticOutputVariables}
+              onvaluechanged={handleRecordVariableChange}
+              field-level-help="Select a Flow record variable to automatically populate default values for all fields"
+            >
+            </c-fsc_flow-combobox>
+          </div>
+
+          <!-- Accordion for Individual Field Defaults -->
+          <div class={individualFieldsSectionClass}>
+            <h3 class="slds-section__title">
+              <button
+                aria-controls="individual-fields-section"
+                aria-expanded={showIndividualFields}
+                class="slds-button slds-section__title-action"
+                onclick={toggleIndividualFields}
+              >
+                <svg
+                  class="slds-section__title-action-icon slds-button__icon slds-button__icon_left"
+                  aria-hidden="true"
+                >
+                  <use
+                    xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#switch"
+                  ></use>
+                </svg>
+                <span class="slds-truncate" title="Individual Field Defaults">
+                  Individual Field Defaults
+                </span>
+              </button>
+            </h3>
+            <div
+              aria-hidden={hideIndividualFields}
+              class="slds-section__content"
+              id="individual-fields-section"
+            >
+              <!-- Search Box -->
+              <div class="slds-m-bottom_small">
+                <div class="slds-form-element">
+                  <label
+                    class="slds-form-element__label slds-assistive-text"
+                    for="field-search"
+                  >
+                    Search Fields
+                  </label>
+                  <div
+                    class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left"
+                  >
+                    <svg
+                      class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default"
+                      aria-hidden="true"
+                    >
+                      <use
+                        xlink:href="/_slds/icons/utility-sprite/svg/symbols.svg#search"
+                      ></use>
+                    </svg>
+                    <input
+                      type="search"
+                      id="field-search"
+                      class="slds-input"
+                      placeholder="Search fields..."
+                      value={searchTerm}
+                      onkeyup={handleSearch}
+                    />
+                  </div>
+                </div>
+              </div>
+              <template for:each={filteredDefaultValueFields} for:item="field">
+                <div key={field.value} class="slds-m-bottom_small">
+                  <div class="slds-form-element">
+                    <label class="slds-form-element__label" for={field.value}>
+                      {field.label}
+                    </label>
+                    <div class="slds-form-element__control">
+                      <div class="slds-grid slds-gutters_x-small">
+                        <div class="slds-col slds-size_1-of-1">
+                          <lightning-input
+                            id={field.value}
+                            value={field.defaultValue}
+                            data-field={field.value}
+                            onchange={handleDefaultValueChange}
+                            placeholder="Enter a static value"
+                            title="Enter a static value"
+                            variant="label-hidden"
+                          >
+                          </lightning-input>
+                        </div>
+                      </div>
+                      <div class="slds-m-top_x-small">
+                        <c-fsc_flow-combobox
+                          name={field.value}
+                          label="Or select a Flow variable"
+                          value={field.selectedVariable}
+                          builder-context={builderContext}
+                          automatic-output-variables={automaticOutputVariables}
+                          data-field={field.value}
+                          onvaluechanged={handleFieldVariableChange}
+                          variant="label-hidden"
+                        >
+                        </c-fsc_flow-combobox>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button label="Cancel" onclick={closeDefaultValuesModal}>
+          </lightning-button>
+          <lightning-button
+            variant="brand"
+            label="Save"
+            onclick={saveDefaultValues}
+          >
+          </lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Excluded Fields Modal -->
+  <template if:true={showExcludedFieldsModal}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      class="slds-modal slds-fade-in-open slds-modal_large"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <button
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={closeExcludedFieldsModal}
+          >
+            <lightning-icon
+              icon-name="utility:close"
+              alternative-text="close"
+              size="small"
+            ></lightning-icon>
+          </button>
+          <h2 class="slds-modal__title">Configure Excluded Fields</h2>
+        </header>
+        <div
+          class="slds-modal__content"
+          style="min-height: 300px; max-height: 60vh; overflow-y: auto"
+        >
+          <lightning-dual-listbox
+            label="Select Fields to Exclude"
+            source-label="Available Fields"
+            selected-label="Excluded Fields"
+            options={fieldOptions}
+            value={tempExcludedFields}
+            onchange={handleTempExcludedFieldsChange}
+            size="7"
+          >
+          </lightning-dual-listbox>
+          <!-- Loading indicator for fields -->
+          <template if:true={isLoadingFields}>
+            <div class="slds-m-top_small slds-align_absolute-center">
+              <lightning-spinner
+                alternative-text="Loading fields"
+                size="small"
+              ></lightning-spinner>
+            </div>
+          </template>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button label="Cancel" onclick={closeExcludedFieldsModal}>
+          </lightning-button>
+          <lightning-button
+            variant="brand"
+            label="Save"
+            onclick={saveExcludedFields}
+          >
+          </lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

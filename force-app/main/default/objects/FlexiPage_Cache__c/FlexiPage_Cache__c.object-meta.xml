@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Caches FlexiPage metadata JSON to reduce Tooling API callouts</description>
+    <label>FlexiPage Cache</label>
+    <nameField>
+        <displayFormat>FPC-{0000}</displayFormat>
+        <label>Cache Name</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>FlexiPage Caches</pluralLabel>
+    <sharingModel>ReadWrite</sharingModel>
+    <visibility>Public</visibility>
+</CustomObject>
