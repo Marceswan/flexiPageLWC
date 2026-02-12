@@ -3,17 +3,12 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getFlexiPageFields from "@salesforce/apex/FlexiPageMetadataService.getFlexiPageFields";
 import getObjectFields from "@salesforce/apex/FlexiPageMetadataService.getObjectFields";
 import getAllSObjects from "@salesforce/apex/FlexiPageMetadataService.getAllSObjects";
-import KA_PERFICIENT_BADGE from "@salesforce/resourceUrl/KAPerficientBadge";
-
 export default class FlexipageRecordFormCPE extends LightningElement {
   // Flow Builder interfaces
   _builderContext = {};
   _inputVariables = [];
   _genericTypeMappings = [];
   _automaticOutputVariables = [];
-
-  // Static resource URL for footer badge
-  badgeUrl = KA_PERFICIENT_BADGE;
 
   // UI State
   // Removed isLoadingFlexiPages since we're using direct text input
