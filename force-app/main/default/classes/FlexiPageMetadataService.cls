@@ -11,7 +11,7 @@
  */
 public with sharing class FlexiPageMetadataService {
   @TestVisible
-  private static MetadataService.IReadResult mockReadResult;
+  private static FlexiPageMdApi.IReadResult mockReadResult;
 
   /**
    * @description Inner class to represent field information from FlexiPage
@@ -170,12 +170,12 @@ public with sharing class FlexiPageMetadataService {
       System.debug('=== STARTING retrieveFlexiPageViaMetadataAPI ===');
       System.debug('Developer Name: ' + developerName);
 
-      // Create MetadataService instance
-      MetadataService.MetadataPort service = createMetadataService();
+      // Create FlexiPageMdApi instance
+      FlexiPageMdApi.MetadataPort service = createMetadataService();
 
       // Read FlexiPage metadata
       System.debug('Calling readMetadata for FlexiPage: ' + developerName);
-      MetadataService.IReadResult readResult;
+      FlexiPageMdApi.IReadResult readResult;
       if (Test.isRunningTest() && mockReadResult != null) {
         readResult = mockReadResult;
       } else {
@@ -185,19 +185,19 @@ public with sharing class FlexiPageMetadataService {
         );
       }
 
-      MetadataService.Metadata[] metadataRecords = readResult.getRecords();
+      FlexiPageMdApi.Metadata[] metadataRecords = readResult.getRecords();
       System.debug(
         'Metadata records returned: ' +
         (metadataRecords != null ? metadataRecords.size() : 0)
       );
 
-      MetadataService.FlexiPage[] flexiPages = new List<MetadataService.FlexiPage>();
+      FlexiPageMdApi.FlexiPage[] flexiPages = new List<FlexiPageMdApi.FlexiPage>();
 
       if (metadataRecords != null) {
-        for (MetadataService.Metadata md : metadataRecords) {
+        for (FlexiPageMdApi.Metadata md : metadataRecords) {
           System.debug('Metadata type: ' + md);
-          if (md instanceof MetadataService.FlexiPage) {
-            flexiPages.add((MetadataService.FlexiPage) md);
+          if (md instanceof FlexiPageMdApi.FlexiPage) {
+            flexiPages.add((FlexiPageMdApi.FlexiPage) md);
           }
         }
       }
@@ -205,7 +205,7 @@ public with sharing class FlexiPageMetadataService {
       System.debug('FlexiPages found: ' + flexiPages.size());
 
       if (flexiPages != null && flexiPages.size() > 0) {
-        MetadataService.FlexiPage flexiPage = flexiPages[0];
+        FlexiPageMdApi.FlexiPage flexiPage = flexiPages[0];
         System.debug('FlexiPage fullName: ' + flexiPage.fullName);
         System.debug('FlexiPage type: ' + flexiPage.type_x);
         System.debug(
@@ -219,7 +219,7 @@ public with sharing class FlexiPageMetadataService {
         if (flexiPage.flexiPageRegions != null) {
           Integer regionIndex = 0;
           for (
-            MetadataService.FlexiPageRegion region : flexiPage.flexiPageRegions
+            FlexiPageMdApi.FlexiPageRegion region : flexiPage.flexiPageRegions
           ) {
             System.debug('=== REGION ' + regionIndex + ' ===');
             System.debug('Region name: ' + region.name);
@@ -234,7 +234,7 @@ public with sharing class FlexiPageMetadataService {
             if (region.componentInstances != null) {
               Integer compIndex = 0;
               for (
-                MetadataService.ComponentInstance comp : region.componentInstances
+                FlexiPageMdApi.ComponentInstance comp : region.componentInstances
               ) {
                 System.debug(
                   '  Component ' + compIndex + ': ' + comp.componentName
@@ -242,7 +242,7 @@ public with sharing class FlexiPageMetadataService {
                 // Log properties to understand structure
                 if (comp.componentInstanceProperties != null) {
                   for (
-                    MetadataService.ComponentInstanceProperty prop : comp.componentInstanceProperties
+                    FlexiPageMdApi.ComponentInstanceProperty prop : comp.componentInstanceProperties
                   ) {
                     System.debug(
                       '    Property: ' + prop.name + ' = ' + prop.value
@@ -256,7 +256,7 @@ public with sharing class FlexiPageMetadataService {
           }
         }
 
-        // Convert MetadataService.FlexiPage to Map structure
+        // Convert FlexiPageMdApi.FlexiPage to Map structure
         Map<String, Object> metadata = convertFlexiPageToMap(flexiPage);
         System.debug('Converted metadata: ' + JSON.serializePretty(metadata));
 
@@ -303,13 +303,13 @@ public with sharing class FlexiPageMetadataService {
   }
 
   /**
-   * @description Creates a MetadataService.MetadataPort instance with proper authentication
-   * @return Configured MetadataService.MetadataPort instance
+   * @description Creates a FlexiPageMdApi.MetadataPort instance with proper authentication
+   * @return Configured FlexiPageMdApi.MetadataPort instance
    */
   @TestVisible
-  private static MetadataService.MetadataPort createMetadataService() {
-    MetadataService.MetadataPort service = new MetadataService.MetadataPort();
-    service.SessionHeader = new MetadataService.SessionHeader_element();
+  private static FlexiPageMdApi.MetadataPort createMetadataService() {
+    FlexiPageMdApi.MetadataPort service = new FlexiPageMdApi.MetadataPort();
+    service.SessionHeader = new FlexiPageMdApi.SessionHeader_element();
 
     // Set the session ID - this works even when null in Lightning contexts
     service.SessionHeader.sessionId = UserInfo.getSessionId();
@@ -318,13 +318,13 @@ public with sharing class FlexiPageMetadataService {
   }
 
   /**
-   * @description Converts MetadataService.FlexiPage to Map structure expected by LWC
-   * @param flexiPage The FlexiPage object from MetadataService
+   * @description Converts FlexiPageMdApi.FlexiPage to Map structure expected by LWC
+   * @param flexiPage The FlexiPage object from FlexiPageMdApi
    * @return Map representation of FlexiPage metadata
    */
   @TestVisible
   private static Map<String, Object> convertFlexiPageToMap(
-    MetadataService.FlexiPage flexiPage
+    FlexiPageMdApi.FlexiPage flexiPage
   ) {
     Map<String, Object> metadata = new Map<String, Object>();
 
@@ -338,7 +338,7 @@ public with sharing class FlexiPageMetadataService {
     if (flexiPage.flexiPageRegions != null) {
       List<Map<String, Object>> regions = new List<Map<String, Object>>();
       for (
-        MetadataService.FlexiPageRegion region : flexiPage.flexiPageRegions
+        FlexiPageMdApi.FlexiPageRegion region : flexiPage.flexiPageRegions
       ) {
         regions.add(convertFlexiPageRegionToMap(region));
       }
@@ -349,13 +349,13 @@ public with sharing class FlexiPageMetadataService {
   }
 
   /**
-   * @description Converts MetadataService.FlexiPageRegion to Map structure
-   * @param region The FlexiPageRegion object from MetadataService
+   * @description Converts FlexiPageMdApi.FlexiPageRegion to Map structure
+   * @param region The FlexiPageRegion object from FlexiPageMdApi
    * @return Map representation of region
    */
   @TestVisible
   private static Map<String, Object> convertFlexiPageRegionToMap(
-    MetadataService.FlexiPageRegion region
+    FlexiPageMdApi.FlexiPageRegion region
   ) {
     System.debug('=== Converting Region: ' + region.name + ' ===');
     Map<String, Object> regionMap = new Map<String, Object>();
@@ -372,7 +372,7 @@ public with sharing class FlexiPageMetadataService {
       List<Map<String, Object>> itemInstances = new List<Map<String, Object>>();
 
       for (
-        MetadataService.ComponentInstance component : region.componentInstances
+        FlexiPageMdApi.ComponentInstance component : region.componentInstances
       ) {
         System.debug('Processing component: ' + component.componentName);
 
@@ -384,7 +384,7 @@ public with sharing class FlexiPageMetadataService {
               ' properties'
           );
           for (
-            MetadataService.ComponentInstanceProperty prop : component.componentInstanceProperties
+            FlexiPageMdApi.ComponentInstanceProperty prop : component.componentInstanceProperties
           ) {
             System.debug('Property: ' + prop.name + ' = ' + prop.value);
           }
@@ -398,7 +398,7 @@ public with sharing class FlexiPageMetadataService {
 
         if (component.componentInstanceProperties != null) {
           for (
-            MetadataService.ComponentInstanceProperty prop : component.componentInstanceProperties
+            FlexiPageMdApi.ComponentInstanceProperty prop : component.componentInstanceProperties
           ) {
             if (prop.name == 'fieldItem') {
               fieldItem = prop.value;
@@ -462,13 +462,13 @@ public with sharing class FlexiPageMetadataService {
   }
 
   /**
-   * @description Converts MetadataService.ComponentInstance to Map structure
-   * @param component The ComponentInstance object from MetadataService
+   * @description Converts FlexiPageMdApi.ComponentInstance to Map structure
+   * @param component The ComponentInstance object from FlexiPageMdApi
    * @return Map representation of component instance
    */
   @TestVisible
   private static Map<String, Object> convertComponentInstanceToMap(
-    MetadataService.ComponentInstance component
+    FlexiPageMdApi.ComponentInstance component
   ) {
     Map<String, Object> componentInstance = new Map<String, Object>();
     componentInstance.put('componentName', component.componentName);
@@ -487,7 +487,7 @@ public with sharing class FlexiPageMetadataService {
       // Check properties for field information
       if (component.componentInstanceProperties != null) {
         for (
-          MetadataService.ComponentInstanceProperty prop : component.componentInstanceProperties
+          FlexiPageMdApi.ComponentInstanceProperty prop : component.componentInstanceProperties
         ) {
           // Look for properties that might contain field references
           if (
@@ -522,7 +522,7 @@ public with sharing class FlexiPageMetadataService {
       List<Map<String, Object>> componentProperties = new List<Map<String, Object>>();
 
       for (
-        MetadataService.ComponentInstanceProperty prop : component.componentInstanceProperties
+        FlexiPageMdApi.ComponentInstanceProperty prop : component.componentInstanceProperties
       ) {
         Map<String, Object> propMap = new Map<String, Object>();
         propMap.put('name', prop.name);
@@ -557,13 +557,13 @@ public with sharing class FlexiPageMetadataService {
   }
 
   /**
-   * @description Converts MetadataService.UiFormulaRule to Map structure
-   * @param rule The UiFormulaRule object from MetadataService
+   * @description Converts FlexiPageMdApi.UiFormulaRule to Map structure
+   * @param rule The UiFormulaRule object from FlexiPageMdApi
    * @return Map representation of visibility rule
    */
   @TestVisible
   private static Map<String, Object> convertUiFormulaRuleToMap(
-    MetadataService.UiFormulaRule rule
+    FlexiPageMdApi.UiFormulaRule rule
   ) {
     Map<String, Object> ruleMap = new Map<String, Object>();
 
@@ -573,7 +573,7 @@ public with sharing class FlexiPageMetadataService {
 
     if (rule.criteria != null) {
       List<Map<String, Object>> criteria = new List<Map<String, Object>>();
-      for (MetadataService.UiFormulaCriterion criterion : rule.criteria) {
+      for (FlexiPageMdApi.UiFormulaCriterion criterion : rule.criteria) {
         Map<String, Object> criterionMap = new Map<String, Object>();
         criterionMap.put('field', criterion.leftValue);
         criterionMap.put('operation', criterion.operator);
@@ -926,7 +926,7 @@ public with sharing class FlexiPageMetadataService {
       );
 
       // Since UiFormatSpecificationSet is not directly accessible via Metadata API,
-      // and MetadataService is not available, we'll return hardcoded data
+      // and FlexiPageMdApi is not available, we'll return hardcoded data
       // for known format sets like Expected_Revenue
 
       System.debug('UiFormatSpecificationSet direct retrieval not available');
@@ -1024,22 +1024,22 @@ public with sharing class FlexiPageMetadataService {
     String objectApiName
   ) {
     try {
-      // Create MetadataService instance
-      MetadataService.MetadataPort service = createMetadataService();
+      // Create FlexiPageMdApi instance
+      FlexiPageMdApi.MetadataPort service = createMetadataService();
 
       // List metadata to find FlexiPages for this object
-      MetadataService.ListMetadataQuery query = new MetadataService.ListMetadataQuery();
+      FlexiPageMdApi.ListMetadataQuery query = new FlexiPageMdApi.ListMetadataQuery();
       query.type_x = 'FlexiPage';
 
-      MetadataService.FileProperties[] properties = service.listMetadata(
-        new List<MetadataService.ListMetadataQuery>{ query },
+      FlexiPageMdApi.FileProperties[] properties = service.listMetadata(
+        new List<FlexiPageMdApi.ListMetadataQuery>{ query },
         64 // API version
       );
 
       List<Map<String, Object>> flexiPages = new List<Map<String, Object>>();
 
       if (properties != null) {
-        for (MetadataService.FileProperties prop : properties) {
+        for (FlexiPageMdApi.FileProperties prop : properties) {
           // Filter for pages related to the object
           if (prop.fullName.containsIgnoreCase(objectApiName)) {
             Map<String, Object> pageInfo = new Map<String, Object>();

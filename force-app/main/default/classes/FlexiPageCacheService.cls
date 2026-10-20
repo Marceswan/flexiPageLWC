@@ -20,6 +20,10 @@ public with sharing class FlexiPageCacheService {
   // Tooling API endpoint for FlexiPage LastModifiedDate checks
   private static final String TOOLING_API_FLEXIPAGE_ENDPOINT = '/services/data/v64.0/tooling/query/';
 
+  // Named Credential for Tooling API callouts. Used as a fallback when the current user's
+  // session callout fails (for example, a user without View Setup, or no Remote Site Setting).
+  private static final String TOOLING_NAMED_CREDENTIAL = 'Tooling_API_Credential';
+
   // Static cache to prevent duplicate SOQL queries in same transaction
   private static Map<String, FlexiPage_Cache__c> transactionCache = new Map<String, FlexiPage_Cache__c>();
 
@@ -35,6 +39,90 @@ public with sharing class FlexiPageCacheService {
       return UserInfo.getSessionId();
     }
     return Page.SessionIdProvider.getContent().toString().trim();
+  }
+
+  /**
+   * @description True when the Tooling_API_Credential Named Credential exists in the org
+   */
+  @TestVisible
+  private static Boolean namedCredentialExists {
+    get {
+      if (namedCredentialExists == null) {
+        namedCredentialExists = ![
+          SELECT Id
+          FROM NamedCredential
+          WHERE DeveloperName = :TOOLING_NAMED_CREDENTIAL
+          LIMIT 1
+        ]
+        .isEmpty();
+      }
+      return namedCredentialExists;
+    }
+    set;
+  }
+
+  /**
+   * @description Builds a Tooling API query request
+   * @param query The Tooling API SOQL query
+   * @param viaNamedCredential True to call out through the Named Credential, false to use
+   * the current user's API session and the org domain (Remote Site)
+   * @return The GET request
+   */
+  @TestVisible
+  private static HttpRequest buildToolingRequest(
+    String query,
+    Boolean viaNamedCredential
+  ) {
+    String endpoint =
+      TOOLING_API_FLEXIPAGE_ENDPOINT +
+      '?q=' +
+      EncodingUtil.urlEncode(query, 'UTF-8');
+
+    HttpRequest req = new HttpRequest();
+    req.setMethod('GET');
+    req.setHeader('Content-Type', 'application/json');
+    if (viaNamedCredential) {
+      req.setEndpoint('callout:' + TOOLING_NAMED_CREDENTIAL + endpoint);
+    } else {
+      req.setEndpoint(URL.getOrgDomainUrl().toExternalForm() + endpoint);
+      req.setHeader('Authorization', 'Bearer ' + getApiSessionId());
+    }
+    return req;
+  }
+
+  /**
+   * @description Sends a Tooling API query with the current user's session (Remote Site).
+   * If that callout fails or returns a non-200 status and the Named Credential exists,
+   * retries through the Named Credential.
+   * @param query The Tooling API SOQL query
+   * @return The response of the last attempt
+   */
+  @TestVisible
+  private static HttpResponse sendToolingQuery(String query) {
+    Http h = new Http();
+    try {
+      HttpResponse res = h.send(buildToolingRequest(query, false));
+      if (res.getStatusCode() == 200 || !namedCredentialExists) {
+        return res;
+      }
+      System.debug(
+        'Session Tooling API callout returned HTTP ' +
+          res.getStatusCode() +
+          ' - retrying via ' +
+          TOOLING_NAMED_CREDENTIAL
+      );
+    } catch (Exception e) {
+      if (!namedCredentialExists) {
+        throw e;
+      }
+      System.debug(
+        'Session Tooling API callout failed: ' +
+          e.getMessage() +
+          ' - retrying via ' +
+          TOOLING_NAMED_CREDENTIAL
+      );
+    }
+    return h.send(buildToolingRequest(query, true));
   }
 
   /**
@@ -213,17 +301,7 @@ public with sharing class FlexiPageCacheService {
         String.escapeSingleQuotes(developerName) +
         '\' LIMIT 1';
 
-      String encodedQuery = EncodingUtil.urlEncode(query, 'UTF-8');
-      String endpoint = TOOLING_API_FLEXIPAGE_ENDPOINT + '?q=' + encodedQuery;
-
-      HttpRequest req = new HttpRequest();
-      req.setEndpoint(URL.getOrgDomainUrl().toExternalForm() + endpoint);
-      req.setMethod('GET');
-      req.setHeader('Authorization', 'Bearer ' + getApiSessionId());
-      req.setHeader('Content-Type', 'application/json');
-
-      Http h = new Http();
-      HttpResponse res = h.send(req);
+      HttpResponse res = sendToolingQuery(query);
 
       if (res.getStatusCode() == 200) {
         Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(
@@ -272,19 +350,7 @@ public with sharing class FlexiPageCacheService {
       String.escapeSingleQuotes(developerName) +
       '\' LIMIT 1';
 
-    String encodedQuery = EncodingUtil.urlEncode(query, 'UTF-8');
-    String endpoint = TOOLING_API_FLEXIPAGE_ENDPOINT + '?q=' + encodedQuery;
-    String fullEndpoint =
-      URL.getOrgDomainUrl().toExternalForm() + endpoint;
-
-    HttpRequest req = new HttpRequest();
-    req.setEndpoint(fullEndpoint);
-    req.setMethod('GET');
-    req.setHeader('Authorization', 'Bearer ' + getApiSessionId());
-    req.setHeader('Content-Type', 'application/json');
-
-    Http h = new Http();
-    HttpResponse res = h.send(req);
+    HttpResponse res = sendToolingQuery(query);
 
     if (res.getStatusCode() == 200) {
       Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(
@@ -308,9 +374,11 @@ public with sharing class FlexiPageCacheService {
     throw new FlexiPageCacheException(
       'Tooling API returned HTTP ' +
         res.getStatusCode() +
-        '. Endpoint: ' +
-        fullEndpoint +
-        '. Check that a Remote Site Setting exists for your org domain.'
+        '. Check that a Remote Site Setting exists for ' +
+        URL.getOrgDomainUrl().toExternalForm() +
+        ', or that the ' +
+        TOOLING_NAMED_CREDENTIAL +
+        ' Named Credential is authenticated.'
     );
   }
 

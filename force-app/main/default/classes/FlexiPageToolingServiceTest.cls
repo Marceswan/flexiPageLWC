@@ -5,6 +5,151 @@ private class FlexiPageToolingServiceTest {
   private static final String TEST_RECORD_ID = '001xx000003DGb0AAG';
 
   @isTest
+  static void testGetFieldValues_RelationshipPaths() {
+    Account grandparent = new Account(Name = 'Grandparent', AnnualRevenue = 0);
+    insert grandparent;
+    Account parent = new Account(Name = 'Parent', ParentId = grandparent.Id);
+    insert parent;
+    Account child = new Account(Name = 'Child', ParentId = parent.Id);
+    insert child;
+
+    Test.startTest();
+    Map<String, Object> result = FlexiPageToolingService.getFieldValues(
+      child.Id,
+      'Account',
+      new List<String>{
+        'Name',
+        'Parent.Name',
+        'ParentId.Name',
+        'Parent.Parent.Name',
+        'Parent.Parent.AnnualRevenue',
+        'Parent.ParentId',
+        'Parent.DoesNotExist__c',
+        'NotARelationship.Name',
+        'Name FROM User'
+      }
+    );
+    Test.stopTest();
+    Map<String, Object> values = (Map<String, Object>) result.get('values');
+    Map<String, Object> metadata = (Map<String, Object>) result.get('metadata');
+    System.assertEquals('Child', values.get('name'));
+    System.assertEquals('Parent', values.get('parent.name'));
+    System.assertEquals('Parent', values.get('parentid.name'));
+    System.assertEquals('Grandparent', values.get('parent.parent.name'));
+    System.assertEquals(
+      Decimal.valueOf('0'),
+      values.get('parent.parent.annualrevenue')
+    );
+    System.assertEquals(grandparent.Id, values.get('parent.parentid'));
+    System.assert(!values.containsKey('parent.doesnotexist__c'));
+    System.assert(!values.containsKey('notarelationship.name'));
+    System.assert(!values.containsKey('name from user'));
+    Map<String, Object> info = (Map<String, Object>) metadata.get(
+      'parent.parent.annualrevenue'
+    );
+    System.assertEquals('CURRENCY', info.get('type'));
+    System.assertEquals(
+      Account.AnnualRevenue.getDescribe().getLabel(),
+      info.get('label')
+    );
+    System.assertEquals(true, info.get('isRelatedField'));
+    System.assertEquals('ParentId', info.get('rootLookupField'));
+    System.assertEquals(
+      Account.AnnualRevenue.getDescribe().getInlineHelpText(),
+      info.get('inlineHelpText')
+    );
+    System.assertEquals(
+      false,
+      info.get('isUpdateable'),
+      'Related fields are read-only'
+    );
+    Map<String, Object> lookupInfo = (Map<String, Object>) metadata.get(
+      'parent.parentid'
+    );
+    System.assertEquals('Grandparent', lookupInfo.get('referenceNameValue'));
+  }
+
+  @isTest
+  static void testGetFieldValues_EmptyRelationships() {
+    Account parent = new Account(Name = 'Parent without grandparent');
+    insert parent;
+    Account child = new Account(Name = 'Child', ParentId = parent.Id);
+    insert child;
+
+    Test.startTest();
+    Map<String, Object> childResult = FlexiPageToolingService.getFieldValues(
+      child.Id,
+      'Account',
+      new List<String>{ 'Parent.Name', 'Parent.Parent.Name' }
+    );
+    Map<String, Object> parentResult = FlexiPageToolingService.getFieldValues(
+      parent.Id,
+      'Account',
+      new List<String>{ 'Parent.Name', 'Parent.Parent.Name' }
+    );
+    Test.stopTest();
+    Map<String, Object> childValues = (Map<String, Object>) childResult.get(
+      'values'
+    );
+    Map<String, Object> parentValues = (Map<String, Object>) parentResult.get(
+      'values'
+    );
+    System.assertEquals(
+      'Parent without grandparent',
+      childValues.get('parent.name')
+    );
+    System.assert(childValues.containsKey('parent.parent.name'));
+    System.assertEquals(null, childValues.get('parent.parent.name'));
+    System.assert(parentValues.containsKey('parent.name'));
+    System.assertEquals(null, parentValues.get('parent.name'));
+    System.assertEquals(null, parentValues.get('parent.parent.name'));
+    Map<String, Object> metadata = (Map<String, Object>) parentResult.get(
+      'metadata'
+    );
+    System.assertEquals(
+      Account.Name.getDescribe().getLabel(),
+      ((Map<String, Object>) metadata.get('parent.name')).get('label')
+    );
+  }
+
+  @isTest
+  static void testRelationshipPathValidation() {
+    System.assertNotEquals(
+      null,
+      FlexiPageToolingService.resolveFieldPath(
+        Account.SObjectType,
+        'parent.name'
+      )
+    );
+    System.assertEquals(
+      null,
+      FlexiPageToolingService.resolveFieldPath(
+        Account.SObjectType,
+        'Parent..Name'
+      )
+    );
+    System.assertEquals(
+      null,
+      FlexiPageToolingService.resolveFieldPath(
+        Account.SObjectType,
+        'Parent.Name FROM User'
+      )
+    );
+    System.assertEquals(
+      null,
+      FlexiPageToolingService.resolveFieldPath(
+        Account.SObjectType,
+        'Parent.Parent.Parent.Parent.Parent.Parent.Name'
+      )
+    );
+    // Who can reference either Contact or Lead; traversing it is deliberately unsupported.
+    System.assertEquals(
+      null,
+      FlexiPageToolingService.resolveFieldPath(Task.SObjectType, 'Who.Name')
+    );
+  }
+
+  @isTest
   static void testGetFlexiPageMetadata_Success() {
     Test.setMock(HttpCalloutMock.class, new FlexiPageToolingServiceMock(false));
 
@@ -44,6 +189,113 @@ private class FlexiPageToolingServiceTest {
       );
     }
     Test.stopTest();
+  }
+
+  @isTest
+  static void testGetFieldValues_PicklistDisplayValue() {
+    Account testAccount = new Account(
+      Name = 'Picklist Account',
+      Industry = 'Technology'
+    );
+    insert testAccount;
+
+    Test.startTest();
+    Map<String, Object> result = FlexiPageToolingService.getFieldValues(
+      testAccount.Id,
+      TEST_OBJECT_API_NAME,
+      new List<String>{ 'Industry' }
+    );
+    Test.stopTest();
+
+    Map<String, Object> metadata = (Map<String, Object>) result.get('metadata');
+    Map<String, Object> industryInfo = (Map<String, Object>) metadata.get(
+      'industry'
+    );
+    System.assertEquals(
+      FlexiPageToolingService.getPicklistDisplayValue(
+        Account.Industry.getDescribe(),
+        'Technology'
+      ),
+      industryInfo.get('displayValue'),
+      'Picklist metadata should carry the display label'
+    );
+  }
+
+  @isTest
+  static void testGetFieldValues_PolymorphicLookupFallback() {
+    Account whatAccount = new Account(Name = 'What Account');
+    insert whatAccount;
+    Task testTask = new Task(Subject = 'Follow up', WhatId = whatAccount.Id);
+    insert testTask;
+
+    Test.startTest();
+    Map<String, Object> result = FlexiPageToolingService.getFieldValues(
+      testTask.Id,
+      'Task',
+      new List<String>{ 'WhatId' }
+    );
+    Test.stopTest();
+
+    Map<String, Object> metadata = (Map<String, Object>) result.get('metadata');
+    Map<String, Object> whatInfo = (Map<String, Object>) metadata.get('whatid');
+    System.assertEquals(
+      'Account',
+      whatInfo.get('referenceObjectName'),
+      'Should resolve the actual target object'
+    );
+    System.assertEquals(
+      'What Account',
+      whatInfo.get('referenceNameValue'),
+      'Should query the name when targets share no name field'
+    );
+  }
+
+  @isTest
+  static void testReferenceNameField() {
+    System.assertEquals(
+      null,
+      FlexiPageToolingService.referenceNameField(
+        new List<Schema.SObjectType>()
+      ),
+      'No targets should have no name field'
+    );
+    System.assertEquals(
+      'Name',
+      FlexiPageToolingService.referenceNameField(
+        new List<Schema.SObjectType>{ Account.SObjectType }
+      ),
+      'Account uses Name'
+    );
+    System.assertEquals(
+      null,
+      FlexiPageToolingService.referenceNameField(
+        new List<Schema.SObjectType>{
+          Account.SObjectType,
+          Case.SObjectType
+        }
+      ),
+      'Targets with different name fields should share none'
+    );
+  }
+
+  @isTest
+  static void testGetPicklistDisplayValue() {
+    Schema.DescribeFieldResult industry = Account.Industry.getDescribe();
+    Schema.PicklistEntry first = industry.getPicklistValues()[0];
+
+    System.assertEquals(
+      null,
+      FlexiPageToolingService.getPicklistDisplayValue(industry, null),
+      'Null value should stay null'
+    );
+    System.assertEquals(
+      first.getLabel() + '; Not_A_Value',
+      FlexiPageToolingService.getPicklistDisplayValue(
+        industry,
+        first.getValue() + ';Not_A_Value'
+      ),
+      'Should map known values to labels and keep unknown values'
+    );
   }
 
   @isTest
@@ -160,10 +412,11 @@ private class FlexiPageToolingServiceTest {
       'Result should contain metadata'
     );
 
-    Map<String, Object> metadata = (Map<String, Object>) result.get(
-      'metadata'
+    Map<String, Object> metadata = (Map<String, Object>) result.get('metadata');
+    System.assert(
+      metadata.containsKey('ownerid'),
+      'Should have OwnerId metadata'
     );
-    System.assert(metadata.containsKey('ownerid'), 'Should have OwnerId metadata');
     System.assert(
       metadata.containsKey('createdbyid'),
       'Should have CreatedById metadata'
@@ -226,9 +479,7 @@ private class FlexiPageToolingServiceTest {
       'Result should contain metadata'
     );
 
-    Map<String, Object> metadata = (Map<String, Object>) result.get(
-      'metadata'
-    );
+    Map<String, Object> metadata = (Map<String, Object>) result.get('metadata');
     Map<String, Object> ownerInfo = (Map<String, Object>) metadata.get(
       'ownerid'
     );
@@ -274,9 +525,7 @@ private class FlexiPageToolingServiceTest {
       'Result should contain metadata'
     );
 
-    Map<String, Object> metadata = (Map<String, Object>) result.get(
-      'metadata'
-    );
+    Map<String, Object> metadata = (Map<String, Object>) result.get('metadata');
     Map<String, Object> parentInfo = (Map<String, Object>) metadata.get(
       'parentid'
     );
@@ -597,8 +846,16 @@ private class FlexiPageToolingServiceTest {
     Test.stopTest();
 
     // Both nulls should remain in place (compareTo returns 0)
-    System.assertEquals(null, fieldList[0].get('label'), 'First should be null');
-    System.assertEquals(null, fieldList[1].get('label'), 'Second should be null');
+    System.assertEquals(
+      null,
+      fieldList[0].get('label'),
+      'First should be null'
+    );
+    System.assertEquals(
+      null,
+      fieldList[1].get('label'),
+      'Second should be null'
+    );
   }
 
   private class FlexiPageToolingServiceMock implements HttpCalloutMock {

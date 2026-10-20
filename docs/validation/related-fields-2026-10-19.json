@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-19",
+  "targetOrg": "MBP-VST-Full",
+  "checkOnly": true,
+  "status": "Succeeded",
+  "validationId": "0AfiJ0000007elVSAQ",
+  "componentsValidated": 33,
+  "apexTestsPassed": 118,
+  "apexTestsFailed": 0,
+  "relatedFieldTests": [
+    {
+      "class": "FlexiPageCustomRelatedFieldsTest",
+      "method": "omitsRelatedFieldsWithoutReadPermission"
+    },
+    {
+      "class": "FlexiPageCustomRelatedFieldsTest",
+      "method": "resolvesCustomLookupAndNestedLookup"
+    },
+    {
+      "class": "FlexiPageRelatedFieldsTest",
+      "method": "readsStandardAndNestedRelationships"
+    },
+    {
+      "class": "FlexiPageRelatedFieldsTest",
+      "method": "rejectsInvalidPathsWithoutDroppingValidFields"
+    },
+    {
+      "class": "FlexiPageRelatedFieldsTest",
+      "method": "resolvesLookupAtEndOfRelatedPath"
+    },
+    {
+      "class": "FlexiPageRelatedFieldsTest",
+      "method": "returnsNullForEmptyLookup"
+    },
+    {
+      "class": "FlexiPageRelatedFieldsTest",
+      "method": "returnsNullForEmptySecondHop"
+    }
+  ],
+  "serviceCoverage": {
+    "coveredLines": 230,
+    "executableLines": 249,
+    "percentage": 92.4
+  },
+  "localTests": {
+    "lwcPassed": 17,
+    "configurationPassed": 5
+  },
+  "analyzer": "PMD unavailable: Java v11+ not installed. Apex syntax parsing and targeted JavaScript lint passed.",
+  "validationScope": "Temporary package included repository dependencies and optional test-support fixtures. Main bundle validated as flexiPageFormRelatedCheck to avoid modifying existing Flow contracts.",
+  "upgradeBlockers": [
+    "Org bundle is flexipageRecordForm; checkout uses flexiPageRecordForm.",
+    "Existing org Flow versions require fieldsName output absent from checkout.",
+    "Cache/metadata dependencies are absent in org and were included in validation."
+  ]
+}

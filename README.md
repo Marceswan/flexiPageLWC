@@ -5,6 +5,7 @@ A Salesforce Lightning Web Component suite that dynamically renders record forms
 ## Features
 
 - **Dynamic Form Rendering** - Automatically renders fields from FlexiPage layouts
+- **Related Object Fields** - Displays fields reached through standard and custom lookup relationships, including nested paths
 - **Visibility Rules** - Client-side evaluation of FlexiPage visibility rules
 - **Conditional Formatting** - Apply styling based on UiFormatSpecificationSet rules
 - **Flow Builder Integration** - Custom Property Editor with generic SObject type support
@@ -87,7 +88,7 @@ Loading skeleton component used as a placeholder while form data loads.
 | `FlexiPageToolingService` | Facade service exposing AuraEnabled methods |
 | `FlexiPageMetadataService` | Core service for Metadata API calls and field retrieval |
 | `FlexiPageCacheService` | Caching layer using `FlexiPage_Cache__c` custom object |
-| `MetadataService` | HTTP callout service for Metadata API |
+| `FlexiPageMdApi` | HTTP callout service for Metadata API |
 
 ## Installation
 
@@ -115,7 +116,7 @@ sf project deploy start --source-dir force-app
 
 ```bash
 # Deploy main LWC only
-sf project deploy start --source-dir force-app/main/default/lwc/flexiPageRecordForm
+sf project deploy start --source-dir force-app/main/default/lwc/flexipageRecordForm
 
 # Deploy CPE
 sf project deploy start --source-dir force-app/main/default/lwc/flexipageRecordFormCPE
@@ -163,6 +164,7 @@ Field1__c:Value1;Field2__c:Value2;Status__c:New
 ```
 
 Supports both `;` and `,` as separators. In the CPE, you can also map Flow variables to individual fields.
+Literal commas, semicolons, colons, and backslashes in values are escaped with a backslash when saved by the CPE. Existing unescaped configurations remain supported.
 
 ### Excluded Fields Format
 
@@ -171,6 +173,27 @@ CustomField__c,AnotherField__c,ThirdField__c
 ```
 
 System read-only fields are auto-excluded in edit mode and do not need to be listed.
+
+## Related Object Fields
+
+FlexiPage field paths such as `Record.Account.Name`, `Record.Account.Parent.Name`,
+and `Record.Customer__r.Status__c` retain their full relationship path. The component
+resolves relationship API names using Salesforce schema metadata and retrieves the
+leaf field's value, label, and type. Fields with the same leaf name on different
+objects remain distinct. Empty lookups display an empty value, and zero and false values are preserved.
+
+Related fields are read-only in view, edit, and Flow screens, consistent with
+[Salesforce Dynamic Forms](https://help.salesforce.com/s/articleView?id=sf.dynamic_forms_spanning_fields.htm&type=5).
+They are excluded from create/update payloads, Flow output, and default values.
+Direct lookup fields such as `AccountId` remain editable.
+Use the complete path (without `Record.`) in `excludedFields`, for example
+`Account.Name,Customer__r.Status__c`. Visibility rules can reference related paths,
+including fields that are not otherwise displayed on the page.
+
+Values reflect saved relationships. New records show empty related fields until
+saved. Changing a lookup clears its displayed related values; saving reloads them.
+Polymorphic relationship traversal (such as `Who.Name`) is unsupported. Retrieval
+checks object and field access along the path and executes queries in user mode.
 
 ## Visibility Rules
 
@@ -214,6 +237,9 @@ sf apex run test --class-names FlexiPageToolingServiceTest --wait 10
 
 # Run LWC Jest tests
 npm run test:unit
+
+# Related-field Apex regression tests (after deploying to a test org)
+sf apex run test --class-names FlexiPageRelatedFieldsTest,FlexiPageToolingServiceTest --target-org MyOrg --wait 10
 ```
 
 ### Lint and Format

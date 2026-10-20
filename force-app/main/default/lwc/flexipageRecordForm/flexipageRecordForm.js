@@ -12,7 +12,9 @@ import { LightningElement, api, track, wire } from "lwc";
 import getFieldValues from "@salesforce/apex/FlexiPageToolingService.getFieldValues";
 import getFlexiPageMetadata from "@salesforce/apex/FlexiPageToolingService.getFlexiPageMetadata";
 import getUiFormatSpecificationSet from "@salesforce/apex/FlexiPageToolingService.getUiFormatSpecificationSet";
-import { parseFlexiPageJson } from "./utils";
+import trackFieldChangesAura from "@salesforce/apex/FieldHistoryTracker.trackFieldChangesAura";
+import { parseFlexiPageJson, collectRuleFields } from "./utils";
+import { parseDefaultValuePairs } from "./defaultValues";
 import { createRecord, updateRecord } from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { FlowAttributeChangeEvent } from "lightning/flowSupport";
@@ -65,6 +67,9 @@ export default class FlexipageRecordForm extends NavigationMixin(
   @api defaultValues = "";
   @api fieldPageName = "";
   @api useFieldHistory = false;
+
+  // Kept for Flows that store this component's outputs automatically
+  @api fieldsName = "";
 
   // Output-only properties for Flow compatibility
   @api enableVisibilityRules = false;
@@ -120,7 +125,7 @@ export default class FlexipageRecordForm extends NavigationMixin(
   modelType = null; // A variable to store the model type (not used in this code)
   refreshKey = 0; // Key to force re-render
   wiredFieldValuesResult; // Store the wire result for refreshApex
-  fieldApiNamesForWire = []; // Fields to fetch via wire
+  fieldApiNamesForWire; // Fields to fetch via wire
   iconFormatCache = {}; // Cache for icon formatting rules
   _pendingDefaultValues = null; // Deferred default values to apply after render
 
@@ -178,7 +183,8 @@ export default class FlexipageRecordForm extends NavigationMixin(
           try {
             console.log("FlexiPage metadata received");
             // Parse the raw FlexiPage Metadata JSON (has flexiPageRegions at top level)
-            this.config = typeof result === "string" ? JSON.parse(result) : result;
+            this.config =
+              typeof result === "string" ? JSON.parse(result) : result;
 
             let parsedSections = parseFlexiPageJson(this.config);
             parsedSections = this.removeExcludedFields(parsedSections);
@@ -240,17 +246,35 @@ export default class FlexipageRecordForm extends NavigationMixin(
     }
   }
 
+  async resolveFlexiPageName() {
+    // fieldPageName names a record field that holds the FlexiPage developer name.
+    // When the field is empty, fall back to flexiPageName.
+    if (!this.fieldPageName || !this._recordId) {
+      return this.flexiPageName;
+    }
+    const result = await getFieldValues({
+      recordId: this._recordId,
+      objectApiName: this.objectApiName,
+      fieldApiNames: [this.fieldPageName]
+    });
+    return (
+      result?.values?.[this.fieldPageName.toLowerCase()] || this.flexiPageName
+    );
+  }
+
   loadFlexiPageConfig() {
     // This method loads the FlexiPage configuration
     console.log("loadFlexiPageConfig called");
 
-    getFlexiPageMetadata({ developerName: this.flexiPageName })
+    this.resolveFlexiPageName()
+      .then((developerName) => getFlexiPageMetadata({ developerName }))
       .then((result) => {
         console.log("FlexiPage config loaded - RAW RESULT:");
         console.log(JSON.stringify(result, null, 2));
         try {
           // Parse the raw FlexiPage Metadata JSON (has flexiPageRegions at top level)
-          this.config = typeof result === "string" ? JSON.parse(result) : result;
+          this.config =
+            typeof result === "string" ? JSON.parse(result) : result;
           console.log("Config structure:");
           console.log(JSON.stringify(this.config, null, 2));
           this.fetchFieldValues(); // Fetch the field values
@@ -335,7 +359,9 @@ export default class FlexipageRecordForm extends NavigationMixin(
     this.isLoading = true;
 
     // Update the fields for the wire adapter - this will trigger wire to fetch data
-    this.fieldApiNamesForWire = [...filteredFields];
+    this.fieldApiNamesForWire = [
+      ...new Set([...filteredFields, ...collectRuleFields(this.config)])
+    ];
   }
 
   async processFieldData() {
@@ -422,7 +448,7 @@ export default class FlexipageRecordForm extends NavigationMixin(
 
     // If we're in a flow context and we updated any fields, update varRecord
     if (this.flowContext && updatedFields) {
-      this._varRecord = { ...this.recordData };
+      this._varRecord = { ...this._varRecord, ...defaultValues };
       this.dispatchEvent(
         new FlowAttributeChangeEvent("varRecord", this._varRecord)
       );
@@ -887,9 +913,17 @@ export default class FlexipageRecordForm extends NavigationMixin(
             const column = section.columns[columnId];
             console.log(`Processing column: ${columnId}`, column);
 
-            // Only include visible fields and blank spaces
+            // Only include visible fields and blank spaces. On an existing record,
+            // getFieldValues omits fields the user cannot read; hide those like a
+            // standard record page does.
             const visibleFields = Object.entries(column.fields)
               .filter(([, field]) => field.isVisible)
+              .filter(
+                ([fieldId, field]) =>
+                  field.isBlankSpace ||
+                  !this._recordId ||
+                  this.fieldMetadata[fieldId.toLowerCase()]
+              )
               .sort((a, b) => (a[1].order || 0) - (b[1].order || 0)); // Sort by order to maintain position
 
             console.log(
@@ -949,9 +983,13 @@ export default class FlexipageRecordForm extends NavigationMixin(
                   );
                 }
 
-                // Check if field is editable (not in read-only fields list and not marked as readonly in config)
+                // Check if field is editable (not in read-only fields list, not marked as readonly in config,
+                // and updateable for this user, e.g. not a formula field)
                 const isEditable =
-                  !readOnlyFields.includes(fieldId) && !field.isReadOnly;
+                  !fieldId.includes(".") &&
+                  !readOnlyFields.includes(fieldId) &&
+                  !field.isReadOnly &&
+                  metadata.isUpdateable !== false;
 
                 // Handle display value for reference fields
                 let displayValue = fieldValue;
@@ -1053,14 +1091,25 @@ export default class FlexipageRecordForm extends NavigationMixin(
 
                 const fieldDataObj = {
                   fieldId: fieldId,
+                  isRelatedField: fieldId.includes("."),
+                  isLocalField: !fieldId.includes("."),
                   fieldData: {
                     value: fieldValue,
                     displayValue: displayValue,
                     label: metadata.label || this.sanitizeHeader(fieldId),
+                    helpText: metadata.inlineHelpText,
                     type: metadata.type,
+                    scale: metadata.scale,
+                    isHtmlFormatted: metadata.isHtmlFormatted,
                     isReference: metadata.type === "REFERENCE",
                     isCheckbox: metadata.type === "BOOLEAN",
                     isCurrency: metadata.type === "CURRENCY",
+                    isDate: metadata.type === "DATE",
+                    isDateTime: metadata.type === "DATETIME",
+                    isPlainText:
+                      metadata.type !== "DATE" && metadata.type !== "DATETIME",
+                    // Picklists show their labels; the raw value stays in value for rules
+                    textValue: metadata.displayValue ?? fieldValue,
                     referenceObjectName: metadata.referenceObjectName,
                     referenceNameValue: metadata.referenceNameValue,
                     recordUrl:
@@ -1103,6 +1152,7 @@ export default class FlexipageRecordForm extends NavigationMixin(
 
             return {
               ...column,
+              columnId,
               fieldIds: visibleFields.map(([id]) => id),
               fields: Object.fromEntries(visibleFields),
               enhancedFields: enhancedFields
@@ -1200,7 +1250,7 @@ export default class FlexipageRecordForm extends NavigationMixin(
     // Deep clone sections to ensure new object references
     return this.sections.map((section) => ({
       ...section,
-      uniqueKey: `${section.sectionId}-${this.refreshKey}-${Date.now()}`,
+      uniqueKey: `${section.sectionId}-${this.refreshKey}`,
       columns: section.columns.map((column) => ({
         ...column,
         enhancedFields: column.enhancedFields
@@ -1209,8 +1259,12 @@ export default class FlexipageRecordForm extends NavigationMixin(
               fieldData: {
                 ...field.fieldData,
                 // Force value update
-                value: field.fieldData.value,
-                displayValue: field.fieldData.value
+                value: field.isRelatedField
+                  ? this.recordData[field.fieldId.toLowerCase()]
+                  : field.fieldData.value,
+                displayValue: field.isRelatedField
+                  ? this.recordData[field.fieldId.toLowerCase()]
+                  : field.fieldData.value
               }
             }))
           : [],
@@ -1244,6 +1298,11 @@ export default class FlexipageRecordForm extends NavigationMixin(
   handleCancel() {
     // This method sets the editMode to false, canceling the edit mode and reverting to read-only mode
     this.editMode = false;
+    const savedData = this.wiredFieldValuesResult?.data;
+    if (savedData) {
+      this.recordData = this.mapFieldValues(savedData.values || savedData);
+      this.processFieldData();
+    }
   }
 
   handleSave() {
@@ -1258,6 +1317,7 @@ export default class FlexipageRecordForm extends NavigationMixin(
         if (
           field.value !== field.defaultValue &&
           !field.readOnly &&
+          !field.fieldName.includes(".") &&
           !this.allExcludedFields.includes(field.fieldName.toLowerCase())
         ) {
           fields[field.fieldName] = field.value;
@@ -1272,6 +1332,13 @@ export default class FlexipageRecordForm extends NavigationMixin(
 
     readOnlyFields.forEach((field) => {
       delete fields[field]; // Remove read-only fields from save
+    });
+
+    // Capture prior values of the changed fields for field history tracking
+    const oldFields = {};
+    Object.keys(fields).forEach((fieldName) => {
+      const oldValue = this.recordData[fieldName.toLowerCase()];
+      oldFields[fieldName] = oldValue === undefined ? null : oldValue;
     });
 
     const recordInput = this._recordId
@@ -1314,6 +1381,17 @@ export default class FlexipageRecordForm extends NavigationMixin(
           })
         );
 
+        if (this.useFieldHistory && Object.keys(fields).length > 0) {
+          trackFieldChangesAura({
+            oldRecordJson: JSON.stringify(oldFields),
+            newRecordJson: JSON.stringify(fields),
+            recordId: this._recordId,
+            objectApiName: this.objectApiName
+          }).catch((error) => {
+            console.error("Error tracking field history:", error);
+          });
+        }
+
         // Set editMode to false and immediately force a complete refresh
         this.editMode = false;
 
@@ -1353,11 +1431,19 @@ export default class FlexipageRecordForm extends NavigationMixin(
     console.log("handleFieldChange event:", event);
     const fieldName = event.target.fieldName;
     const value = event.target.value;
+    if (fieldName?.includes(".")) return;
     console.log("handleFieldChange", fieldName, value);
 
     // Update recordData
     if (fieldName) {
       this.recordData[fieldName.toLowerCase()] = value;
+      Object.entries(this.fieldMetadata).forEach(([path, metadata]) => {
+        if (
+          metadata.rootLookupField?.toLowerCase() === fieldName.toLowerCase()
+        ) {
+          this.recordData[path] = null;
+        }
+      });
     }
 
     if (this.flowContext && fieldName) {
@@ -1383,19 +1469,10 @@ export default class FlexipageRecordForm extends NavigationMixin(
     };
 
     try {
-      const separator = this.defaultValues.includes(";") ? ";" : ",";
-      const fieldPairs = this.defaultValues.split(separator);
-      console.log("Split field pairs:", fieldPairs);
+      const fieldValues = parseDefaultValuePairs(this.defaultValues);
 
-      fieldPairs.forEach((pair) => {
-        if (!pair.trim()) return;
-
-        const [fieldName, ...valueParts] = pair
-          .split(":")
-          .map((item) => item.trim());
-        const value = valueParts.join(":");
-
-        if (fieldName && value !== undefined) {
+      Object.entries(fieldValues).forEach(([fieldName, value]) => {
+        if (fieldName && !fieldName.includes(".") && value !== undefined) {
           // Process value based on type
           let processedValue = value;
           if (value.toLowerCase() === "true") processedValue = true;
@@ -1521,7 +1598,7 @@ export default class FlexipageRecordForm extends NavigationMixin(
         );
         // Trigger wire by updating field names
         const tempFields = [...this.fieldApiNamesForWire];
-        this.fieldApiNamesForWire = [];
+        this.fieldApiNamesForWire = undefined;
         Promise.resolve().then(() => {
           this.fieldApiNamesForWire = tempFields;
         });
