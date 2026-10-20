@@ -25,9 +25,9 @@
   margin-bottom: 1rem;
 }
 
-/* Standard section title spacing */
+/* Standard section title spacing: 0.5rem from title to first field */
 .slds-section__title {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 
 /* Section content padding */
@@ -37,19 +37,14 @@
 
 /* Add spacing between sections */
 section.slds-section:not(:first-child) {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
-/* Column padding for proper field separation */
-.slds-col {
+/* Column padding: 0.75rem per side, 1.5rem gutter, as on a standard record page */
+.slds-col,
+.slds-col.slds-p-horizontal_small {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
-}
-
-/* Override the small padding to match standard layouts */
-.slds-col.slds-p-horizontal_small {
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 
 /* Standard padding on form elements */
@@ -68,13 +63,28 @@ lightning-output-field {
   --sds-c-outputfield-spacing-block-end: 0;
 }
 
-/* Additional spacing for better visual separation */
+/* Read-only fields match a standard record page: rows touch, one bottom border */
 .slds-form-element_readonly {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
+  padding: 0 0.25rem;
+}
+
+.slds-form-element_readonly .slds-form-element__label {
+  padding-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+.slds-form-element_readonly .slds-form-element__control {
+  padding: 0.125rem 0;
+}
+
+.slds-form-element_readonly .slds-form-element__static {
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 /* Ensure last form element in a column doesn't have extra bottom margin */
-.slds-col > .slds-form-element:last-child {
+.slds-col > .slds-form-element:not(.slds-form-element_readonly):last-child {
   margin-bottom: 0.5rem;
 }
 
@@ -89,11 +99,6 @@ lightning-card {
   --sds-c-card-body-spacing-block-end: 1rem;
   --sds-c-card-body-spacing-inline-start: 1rem;
   --sds-c-card-body-spacing-inline-end: 1rem;
-}
-
-/* Ensure consistent field heights */
-.slds-form-element_readonly {
-  min-height: 2rem;
 }
 
 /* Remove bottom border that was adding extra space */
@@ -115,6 +120,7 @@ lightning-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
 }
 
 .slds-form-element_edit .slds-form-element__static_edit lightning-button-icon {

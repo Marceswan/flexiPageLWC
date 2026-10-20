@@ -7,15 +7,14 @@
 		<members>FlexiPageMetadataServiceTest</members>
 		<members>FlexiPageToolingService</members>
 		<members>FlexiPageToolingServiceTest</members>
-		<members>MetadataService</members>
-		<members>MetadataServiceTest</members>
+		<members>FlexiPageMdApi</members>
+		<members>FlexiPageMdApiTest</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
 		<members>flexipageRecordForm</members>
 		<members>flexipageRecordFormCPE</members>
 		<members>flexipageRecordFormConfig</members>
-		<members>flexiPageRecordForm</members>
 		<members>flexiPageRecordFormPropertyEditor</members>
 		<name>LightningComponentBundle</name>
 	</types>

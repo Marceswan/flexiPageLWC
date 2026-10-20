@@ -45,7 +45,7 @@ export function parseFlexiPageJson(flexiPageJson) {
         region.itemInstances.forEach((item, index) => {
           if (item.fieldInstance) {
             const fieldApiName = item.fieldInstance.fieldItem.replace(
-              "Record.",
+              /^Record\./,
               ""
             );
             sections[defaultSectionId].columns.defaultColumn.fields[
@@ -57,9 +57,12 @@ export function parseFlexiPageJson(flexiPageJson) {
                 )?.value || "",
               isVisible: true,
               isRequired: false,
-              isReadOnly: false,
-              visibilityRule: null,
-              conditionalFormatRuleset: null,
+              isReadOnly: fieldApiName.includes("."),
+              visibilityRule: item.fieldInstance.visibilityRule || null,
+              conditionalFormatRuleset:
+                item.fieldInstance.fieldInstanceProperties?.find(
+                  (prop) => prop.name === "conditionalFormatRuleset"
+                )?.value || null,
               order: index
             };
             console.log(`Added field: ${fieldApiName}`);
@@ -149,7 +152,7 @@ export function parseFlexiPageJson(flexiPageJson) {
           // Handle field instances
           if (itemInstance.fieldInstance) {
             const fieldApiName = itemInstance.fieldInstance.fieldItem.replace(
-              "Record.",
+              /^Record\./,
               ""
             );
             const fieldValue =
@@ -162,7 +165,8 @@ export function parseFlexiPageJson(flexiPageJson) {
                 (prop) => prop.name === "uiBehavior"
               )?.value;
             const isRequired = uiBehavior === "required";
-            const isReadOnly = uiBehavior === "readonly";
+            const isReadOnly =
+              uiBehavior === "readonly" || fieldApiName.includes(".");
             const visibilityRule = itemInstance.fieldInstance?.visibilityRule;
             // Extract conditionalFormatRuleset from fieldInstanceProperties array
             const conditionalFormatRuleset =
@@ -228,4 +232,20 @@ export function parseFlexiPageJson(flexiPageJson) {
   console.log("Parsed Sections:", JSON.stringify(sections, null, 2));
 
   return sections;
+}
+export function collectRuleFields(value) {
+  const fields = new Set();
+  function visit(node) {
+    if (!node || typeof node !== "object") return;
+    for (const [key, child] of Object.entries(node)) {
+      if (key === "leftValue" && typeof child === "string") {
+        const match = child.match(/^\{!Record\.([a-zA-Z0-9_.]+)\}$/);
+        if (match) fields.add(match[1]);
+      } else if (typeof child === "object") {
+        visit(child);
+      }
+    }
+  }
+  visit(value);
+  return [...fields];
 }

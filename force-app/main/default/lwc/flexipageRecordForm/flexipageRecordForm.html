@@ -37,12 +37,12 @@
     </template>
     <template if:false={isLoading}>
       <template if:false={error}>
-        <div key={refreshKey}>
+        <div>
           <template if:true={isReadOnly}>
             <template if:true={isDataAvailable}>
               <template for:each={sectionsWithKey} for:item="section">
                 <section key={section.uniqueKey} class={section.class}>
-                  <div class="slds-section__title slds-m-bottom_x-small">
+                  <div class="slds-section__title">
                     <button
                       aria-expanded={section.isOpen}
                       class="slds-button slds-section__title-action"
@@ -84,7 +84,13 @@
                                   &nbsp;
                                 </div>
                               </template>
-                              <template if:false={field.isBlankSpace}>
+                              <template if:true={field.isRelatedField}>
+                                <c-related-record-field
+                                  key={field.fieldId}
+                                  field-data={field.fieldData}
+                                ></c-related-record-field>
+                              </template>
+                              <template if:true={field.isLocalField}>
                                 <div
                                   key={field.fieldId}
                                   class="slds-form-element slds-form-element_readonly slds-form-element_stacked"
@@ -95,6 +101,13 @@
                                     <span class="slds-form-element__label"
                                       >{field.fieldData.label}</span
                                     >
+                                    <template
+                                      if:true={field.fieldData.helpText}
+                                    >
+                                      <lightning-helptext
+                                        content={field.fieldData.helpText}
+                                      ></lightning-helptext>
+                                    </template>
                                     <div class="slds-form-element__control">
                                       <div class="slds-form-element__static">
                                         <template
@@ -145,6 +158,13 @@
                                     <span class="slds-form-element__label"
                                       >{field.fieldData.label}</span
                                     >
+                                    <template
+                                      if:true={field.fieldData.helpText}
+                                    >
+                                      <lightning-helptext
+                                        content={field.fieldData.helpText}
+                                      ></lightning-helptext>
+                                    </template>
                                     <div class="slds-form-element__control">
                                       <div class="slds-form-element__static">
                                         <template
@@ -204,9 +224,36 @@
                                               <span
                                                 class={field.fieldData.formatClasses}
                                               >
-                                                <lightning-formatted-text
-                                                  value={field.fieldData.value}
-                                                ></lightning-formatted-text>
+                                                <template
+                                                  if:true={field.fieldData.isDate}
+                                                >
+                                                  <lightning-formatted-date-time
+                                                    value={field.fieldData.value}
+                                                    year="numeric"
+                                                    month="numeric"
+                                                    day="numeric"
+                                                    time-zone="UTC"
+                                                  ></lightning-formatted-date-time>
+                                                </template>
+                                                <template
+                                                  if:true={field.fieldData.isDateTime}
+                                                >
+                                                  <lightning-formatted-date-time
+                                                    value={field.fieldData.value}
+                                                    year="numeric"
+                                                    month="numeric"
+                                                    day="numeric"
+                                                    hour="numeric"
+                                                    minute="2-digit"
+                                                  ></lightning-formatted-date-time>
+                                                </template>
+                                                <template
+                                                  if:true={field.fieldData.isPlainText}
+                                                >
+                                                  <lightning-formatted-text
+                                                    value={field.fieldData.textValue}
+                                                  ></lightning-formatted-text>
+                                                </template>
                                                 <template
                                                   if:true={field.fieldData.iconName}
                                                 >
@@ -262,7 +309,7 @@
             <template if:true={isDataAvailable}>
               <template for:each={sectionsWithKey} for:item="section">
                 <section key={section.uniqueKey} class={section.class}>
-                  <div class="slds-section__title slds-m-bottom_x-small">
+                  <div class="slds-section__title">
                     <button
                       aria-expanded={section.isOpen}
                       class="slds-button slds-section__title-action"
@@ -304,7 +351,13 @@
                                   &nbsp;
                                 </div>
                               </template>
-                              <template if:false={field.isBlankSpace}>
+                              <template if:true={field.isRelatedField}>
+                                <c-related-record-field
+                                  key={field.fieldId}
+                                  field-data={field.fieldData}
+                                ></c-related-record-field>
+                              </template>
+                              <template if:true={field.isLocalField}>
                                 <div
                                   key={field.fieldId}
                                   class="slds-form-element slds-form-element_readonly slds-form-element_stacked slds-form-element_edit"
@@ -315,6 +368,13 @@
                                     <span class="slds-form-element__label"
                                       >{field.fieldData.label}</span
                                     >
+                                    <template
+                                      if:true={field.fieldData.helpText}
+                                    >
+                                      <lightning-helptext
+                                        content={field.fieldData.helpText}
+                                      ></lightning-helptext>
+                                    </template>
                                     <div class="slds-form-element__control">
                                       <div
                                         class="slds-form-element__static slds-form-element__static_edit"
@@ -378,6 +438,13 @@
                                     <span class="slds-form-element__label"
                                       >{field.fieldData.label}</span
                                     >
+                                    <template
+                                      if:true={field.fieldData.helpText}
+                                    >
+                                      <lightning-helptext
+                                        content={field.fieldData.helpText}
+                                      ></lightning-helptext>
+                                    </template>
                                     <div class="slds-form-element__control">
                                       <div
                                         class="slds-form-element__static slds-form-element__static_edit"
@@ -439,9 +506,36 @@
                                               <span
                                                 class={field.fieldData.formatClasses}
                                               >
-                                                <lightning-formatted-text
-                                                  value={field.fieldData.value}
-                                                ></lightning-formatted-text>
+                                                <template
+                                                  if:true={field.fieldData.isDate}
+                                                >
+                                                  <lightning-formatted-date-time
+                                                    value={field.fieldData.value}
+                                                    year="numeric"
+                                                    month="numeric"
+                                                    day="numeric"
+                                                    time-zone="UTC"
+                                                  ></lightning-formatted-date-time>
+                                                </template>
+                                                <template
+                                                  if:true={field.fieldData.isDateTime}
+                                                >
+                                                  <lightning-formatted-date-time
+                                                    value={field.fieldData.value}
+                                                    year="numeric"
+                                                    month="numeric"
+                                                    day="numeric"
+                                                    hour="numeric"
+                                                    minute="2-digit"
+                                                  ></lightning-formatted-date-time>
+                                                </template>
+                                                <template
+                                                  if:true={field.fieldData.isPlainText}
+                                                >
+                                                  <lightning-formatted-text
+                                                    value={field.fieldData.textValue}
+                                                  ></lightning-formatted-text>
+                                                </template>
                                                 <template
                                                   if:true={field.fieldData.iconName}
                                                 >
@@ -488,7 +582,6 @@
                                 class="slds-form-element slds-form-element_readonly slds-form-element_stacked"
                               >
                                 <span
-                                  key={fieldId}
                                   class="slds-grow slds-is-relative"
                                   style="min-height: 0.5rem"
                                 >
@@ -532,7 +625,13 @@
                                   &nbsp;
                                 </div>
                               </template>
-                              <template if:false={field.isBlankSpace}>
+                              <template if:true={field.isRelatedField}>
+                                <c-related-record-field
+                                  key={field.fieldId}
+                                  field-data={field.fieldData}
+                                ></c-related-record-field>
+                              </template>
+                              <template if:true={field.isLocalField}>
                                 <lightning-input-field
                                   key={field.fieldId}
                                   data-field-name={field.fieldId}

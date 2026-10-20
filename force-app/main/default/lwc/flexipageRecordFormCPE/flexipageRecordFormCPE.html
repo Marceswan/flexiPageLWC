@@ -8,9 +8,13 @@
 <template>
   <div class="slds-form slds-form_stacked">
     <div class="slds-p-around_small">
-      <h3 class="slds-text-heading_small slds-m-bottom_small">
-        FlexiPage Record Form Configuration
-      </h3>
+      <header class="config-header slds-m-bottom_medium">
+        <span class="config-eyebrow">Flow screen</span>
+        <h2 class="slds-text-heading_medium">Record form</h2>
+        <p class="config-description">
+          Choose the object and page, then tailor what the form shows.
+        </p>
+      </header>
 
       <!-- Object Selection -->
       <lightning-combobox
@@ -39,7 +43,7 @@
       </lightning-input>
 
       <!-- Basic Settings -->
-      <div class="slds-box slds-m-bottom_small">
+      <div class="config-panel slds-m-bottom_small">
         <h3 class="slds-text-heading_small slds-m-bottom_x-small">
           Basic Settings
         </h3>
@@ -93,7 +97,7 @@
       </div>
 
       <!-- Advanced Settings -->
-      <div class="slds-box">
+      <div class="config-panel">
         <div
           class="slds-grid slds-grid_vertical-align-center slds-m-bottom_x-small"
         >
@@ -101,14 +105,12 @@
             <h3 class="slds-text-heading_small">Advanced Settings</h3>
           </div>
           <div class="slds-col_bump-left">
-            <lightning-button-icon
+            <lightning-button
+              label={advancedSettingsLabel}
               icon-name={advancedSettingsIcon}
-              alternative-text="Toggle Advanced Settings"
-              title="Toggle Advanced Settings"
-              variant="bare"
+              aria-expanded={showAdvancedSettings}
               onclick={toggleAdvancedSettings}
-            >
-            </lightning-button-icon>
+            ></lightning-button>
           </div>
         </div>
 
@@ -125,6 +127,7 @@
               label="Configure Excluded Fields"
               variant="neutral"
               onclick={openExcludedFieldsModal}
+              data-excluded-modal-trigger
               class="slds-m-top_x-small"
             >
             </lightning-button>
@@ -147,34 +150,17 @@
               label="Configure Default Values"
               variant="neutral"
               onclick={openDefaultValuesModal}
+              data-default-modal-trigger
               class="slds-m-top_x-small"
             >
             </lightning-button>
+            <template if:true={defaultValuesCount}>
+              <div class="slds-m-top_x-small slds-text-body_small">
+                {defaultValuesCount} defaults configured
+              </div>
+            </template>
           </div>
 
-          <!-- Divider -->
-          <hr class="slds-m-vertical_medium" />
-
-          <!-- Button Labels -->
-          <lightning-input
-            label="Save Button Label"
-            value={saveLabel}
-            placeholder="Save"
-            field-level-help="Custom label for the Save button"
-            onchange={handleSaveLabelChange}
-            class="slds-m-bottom_x-small"
-          >
-          </lightning-input>
-
-          <lightning-input
-            label="Cancel Button Label"
-            value={cancelLabel}
-            placeholder="Cancel"
-            field-level-help="Custom label for the Cancel button"
-            onchange={handleCancelLabelChange}
-            class="slds-m-bottom_x-small"
-          >
-          </lightning-input>
         </template>
       </div>
     </div>
@@ -183,13 +169,14 @@
 
   <!-- Default Values Modal -->
   <template if:true={showDefaultValuesModal}>
-    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-      <div class="slds-modal__container">
+    <section role="dialog" aria-modal="true" aria-labelledby="default-values-title" tabindex="-1" class="slds-modal slds-fade-in-open" onkeydown={handleModalKeydown}>
+      <div class="slds-modal__container config-modal-container">
         <header class="slds-modal__header">
           <button
             class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
             title="Close"
             onclick={closeDefaultValuesModal}
+            data-modal-close
           >
             <lightning-icon
               icon-name="utility:close"
@@ -197,9 +184,9 @@
               size="small"
             ></lightning-icon>
           </button>
-          <h2 class="slds-modal__title">Configure Default Values</h2>
+          <h2 id="default-values-title" class="slds-modal__title">Configure Default Values</h2>
         </header>
-        <div class="slds-modal__content slds-p-around_medium">
+        <div class="slds-modal__content slds-p-around_medium config-modal-content">
           <!-- Record Variable Selector -->
           <div class="slds-m-bottom_medium">
             <c-fsc_flow-combobox
@@ -238,7 +225,7 @@
             </h3>
             <div
               aria-hidden={hideIndividualFields}
-              class="slds-section__content"
+              class="slds-section__content config-section-content"
               id="individual-fields-section"
             >
               <!-- Search Box -->
@@ -273,7 +260,7 @@
                 </div>
               </div>
               <template for:each={filteredDefaultValueFields} for:item="field">
-                <div key={field.value} class="slds-m-bottom_small">
+                <div key={field.value} class="default-field-row slds-m-bottom_small">
                   <div class="slds-form-element">
                     <label class="slds-form-element__label" for={field.value}>
                       {field.label}
@@ -283,6 +270,7 @@
                         <div class="slds-col slds-size_1-of-1">
                           <lightning-input
                             id={field.value}
+                            label="Static value"
                             value={field.defaultValue}
                             data-field={field.value}
                             onchange={handleDefaultValueChange}
@@ -293,10 +281,11 @@
                           </lightning-input>
                         </div>
                       </div>
+                      <div class="default-field-separator">or</div>
                       <div class="slds-m-top_x-small">
                         <c-fsc_flow-combobox
                           name={field.value}
-                          label="Or select a Flow variable"
+                          label="Flow variable"
                           value={field.selectedVariable}
                           builder-context={builderContext}
                           automatic-output-variables={automaticOutputVariables}
@@ -332,15 +321,19 @@
   <template if:true={showExcludedFieldsModal}>
     <section
       role="dialog"
+      aria-modal="true"
+      aria-labelledby="excluded-fields-title"
       tabindex="-1"
       class="slds-modal slds-fade-in-open slds-modal_large"
+      onkeydown={handleModalKeydown}
     >
-      <div class="slds-modal__container">
+      <div class="slds-modal__container config-modal-container config-modal-container_large">
         <header class="slds-modal__header">
           <button
             class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
             title="Close"
             onclick={closeExcludedFieldsModal}
+            data-modal-close
           >
             <lightning-icon
               icon-name="utility:close"
@@ -348,11 +341,10 @@
               size="small"
             ></lightning-icon>
           </button>
-          <h2 class="slds-modal__title">Configure Excluded Fields</h2>
+          <h2 id="excluded-fields-title" class="slds-modal__title">Configure Excluded Fields</h2>
         </header>
         <div
-          class="slds-modal__content"
-          style="min-height: 300px; max-height: 60vh; overflow-y: auto"
+          class="slds-modal__content config-modal-content excluded-fields-content"
         >
           <lightning-dual-listbox
             label="Select Fields to Exclude"

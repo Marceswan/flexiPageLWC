@@ -1,0 +1,91 @@
+<template>
+  <div
+    class="slds-form-element slds-form-element_readonly slds-form-element_stacked"
+  >
+    <span class="slds-form-element__label">{fieldData.label}</span>
+    <div class="slds-form-element__control">
+      <div class="slds-form-element__static">
+        <span class={fieldData.formatClasses}>
+          <template lwc:if={hasValue}>
+            <template lwc:if={isBoolean}>
+              <lightning-input
+                type="checkbox"
+                label={fieldData.label}
+                variant="label-hidden"
+                checked={fieldData.value}
+                disabled
+              ></lightning-input>
+            </template>
+            <template lwc:elseif={isReference}>
+              <lightning-formatted-url
+                value={fieldData.recordUrl}
+                label={referenceLabel}
+              ></lightning-formatted-url>
+            </template>
+            <template lwc:elseif={isNumber}>
+              <lightning-formatted-number
+                value={numberValue}
+                format-style={numberStyle}
+                currency-code={currencyCode}
+                maximum-fraction-digits={fieldData.scale}
+              ></lightning-formatted-number>
+            </template>
+            <template lwc:elseif={isDate}>
+              <lightning-formatted-date-time
+                value={fieldData.value}
+                time-zone="UTC"
+                year="numeric"
+                month="2-digit"
+                day="2-digit"
+              ></lightning-formatted-date-time>
+            </template>
+            <template lwc:elseif={isDateTime}>
+              <lightning-formatted-date-time
+                value={fieldData.value}
+                year="numeric"
+                month="2-digit"
+                day="2-digit"
+                hour="2-digit"
+                minute="2-digit"
+              ></lightning-formatted-date-time>
+            </template>
+            <template lwc:elseif={isEmail}>
+              <lightning-formatted-email
+                value={fieldData.value}
+              ></lightning-formatted-email>
+            </template>
+            <template lwc:elseif={isPhone}>
+              <lightning-formatted-phone
+                value={fieldData.value}
+              ></lightning-formatted-phone>
+            </template>
+            <template lwc:elseif={isUrl}>
+              <lightning-formatted-url
+                value={fieldData.value}
+              ></lightning-formatted-url>
+            </template>
+            <template lwc:elseif={isRichText}>
+              <lightning-formatted-rich-text
+                value={fieldData.value}
+              ></lightning-formatted-rich-text>
+            </template>
+            <template lwc:else>
+              <lightning-formatted-text
+                value={fieldData.value}
+              ></lightning-formatted-text>
+            </template>
+          </template>
+          <template lwc:else>&nbsp;</template>
+        </span>
+        <template lwc:if={fieldData.iconName}>
+          <lightning-icon
+            icon-name={fieldData.iconName}
+            class={fieldData.iconClass}
+            size="x-small"
+            alternative-text="Conditional Format"
+          ></lightning-icon>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>

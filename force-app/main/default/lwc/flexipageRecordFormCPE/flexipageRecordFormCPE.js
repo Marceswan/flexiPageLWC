@@ -3,6 +3,7 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getFlexiPageFields from "@salesforce/apex/FlexiPageMetadataService.getFlexiPageFields";
 import getObjectFields from "@salesforce/apex/FlexiPageMetadataService.getObjectFields";
 import getAllSObjects from "@salesforce/apex/FlexiPageMetadataService.getAllSObjects";
+import { parseDefaultValuePairs, formatDefaultValuePairs } from "./defaultValues";
 export default class FlexipageRecordFormCPE extends LightningElement {
   // Flow Builder interfaces
   _builderContext = {};
@@ -26,6 +27,9 @@ export default class FlexipageRecordFormCPE extends LightningElement {
   @track selectedRecordVariable = "";
   @track flexiPageFields = []; // Fields from the selected FlexiPage
   @track searchTerm = ""; // Search term for filtering fields
+  _fieldLoadToken = 0;
+  _focusModalOnRender = false;
+  _focusReturnSelector = null;
 
   // Configuration values
   objectApiName;
@@ -47,6 +51,20 @@ export default class FlexipageRecordFormCPE extends LightningElement {
     this.loadAllSObjects();
     // Ensure flowContext is always set to true in Flow Builder
     this.dispatchConfigurationChange("flowContext", true, "Boolean");
+  }
+
+  renderedCallback() {
+    if (this._focusModalOnRender) {
+      const closeButton = this.template.querySelector("[data-modal-close]");
+      if (closeButton) {
+        this._focusModalOnRender = false;
+        closeButton.focus();
+      }
+    } else if (this._focusReturnSelector) {
+      const trigger = this.template.querySelector(this._focusReturnSelector);
+      this._focusReturnSelector = null;
+      trigger?.focus();
+    }
   }
 
   // Getters and setters for Flow Builder interfaces
@@ -89,6 +107,16 @@ export default class FlexipageRecordFormCPE extends LightningElement {
     return this.showAdvancedSettings
       ? "utility:chevrondown"
       : "utility:chevronright";
+  }
+
+  get advancedSettingsLabel() {
+    return this.showAdvancedSettings ? "Hide settings" : "Show settings";
+  }
+
+  get defaultValuesCount() {
+    return Object.values(this.defaultFieldValues).filter(
+      (value) => value !== null && value !== undefined && value !== ""
+    ).length;
   }
 
   get isFlexiPageDisabled() {
@@ -196,7 +224,12 @@ export default class FlexipageRecordFormCPE extends LightningElement {
       // If we have a pending field load (from saved configuration), load the fields
       if (pendingFieldLoad) {
         this.selectedFlexiPage = pendingFieldLoad;
+        const configuredObject = this.objectApiName;
         this.loadFields().then(() => {
+          if (
+            configuredObject !== this.objectApiName ||
+            pendingFieldLoad !== this.selectedFlexiPage
+          ) return;
           if (pendingExcludedFields) {
             this.excludedFields = pendingExcludedFields
               .split(",")
@@ -230,11 +263,15 @@ export default class FlexipageRecordFormCPE extends LightningElement {
 
   // Event handlers
   handleObjectChange(event) {
+    this._fieldLoadToken += 1;
     this.objectApiName = event.detail.value;
     this.dispatchConfigurationChange("objectApiName", this.objectApiName);
 
     // Reset dependent selections
     this.selectedFlexiPage = null;
+    this.fieldOptions = [];
+    this.defaultValueFields = [];
+    this.flexiPageFields = [];
     this.excludedFields = [];
     this.defaultFieldValues = {};
     this.dispatchConfigurationChange("flexiPageName", null);
@@ -258,6 +295,8 @@ export default class FlexipageRecordFormCPE extends LightningElement {
 
   handleFlexiPageChange(event) {
     this.selectedFlexiPage = event.detail.value;
+    this.fieldOptions = [];
+    this.defaultValueFields = [];
     this.dispatchConfigurationChange("flexiPageName", this.selectedFlexiPage);
 
     // Load fields when FlexiPage is selected
@@ -311,9 +350,13 @@ export default class FlexipageRecordFormCPE extends LightningElement {
   // Removed loadFlexiPages method since we're using direct text input
 
   async loadFields() {
+    const loadToken = ++this._fieldLoadToken;
+    const objectApiName = this.objectApiName;
+    const flexiPageName = this.selectedFlexiPage;
     if (!this.objectApiName || !this.selectedFlexiPage) {
       this.fieldOptions = [];
       this.defaultValueFields = [];
+      this.isLoadingFields = false;
       return;
     }
 
@@ -323,7 +366,7 @@ export default class FlexipageRecordFormCPE extends LightningElement {
       console.log("=== STARTING FIELD LOAD ===");
       console.log("Loading fields for object:", this.objectApiName);
       const allObjectFields = await getObjectFields({
-        objectApiName: this.objectApiName
+        objectApiName
       });
       console.log(
         "All object fields count:",
@@ -339,7 +382,7 @@ export default class FlexipageRecordFormCPE extends LightningElement {
       let flexiPageFieldInfo = [];
       try {
         flexiPageFieldInfo = await getFlexiPageFields({
-          developerName: this.selectedFlexiPage
+          developerName: flexiPageName
         });
         console.log(
           "FlexiPage field info count:",
@@ -363,6 +406,14 @@ export default class FlexipageRecordFormCPE extends LightningElement {
           "Invalid or empty FlexiPage field info, using all object fields"
         );
         flexiPageFieldInfo = [];
+      }
+
+      if (
+        loadToken !== this._fieldLoadToken ||
+        objectApiName !== this.objectApiName ||
+        flexiPageName !== this.selectedFlexiPage
+      ) {
+        return;
       }
 
       // Extract field names from FlexiPage (convert to lowercase for comparison)
@@ -449,11 +500,12 @@ export default class FlexipageRecordFormCPE extends LightningElement {
 
       console.log("=== FIELD LOAD COMPLETE ===");
     } catch (error) {
+      if (loadToken !== this._fieldLoadToken) return;
       console.error("Error loading fields:", error);
       console.error("Error details:", error);
       this.showError("Unable to load fields for the selected object");
     } finally {
-      this.isLoadingFields = false;
+      if (loadToken === this._fieldLoadToken) this.isLoadingFields = false;
     }
   }
 
@@ -466,12 +518,15 @@ export default class FlexipageRecordFormCPE extends LightningElement {
     }
 
     this.showDefaultValuesModal = true;
+    this._focusModalOnRender = true;
     // Copy current values to temp storage
     this.tempDefaultValues = { ...this.defaultFieldValues };
 
     // Load fields if not already loaded
     if (this.defaultValueFields.length === 0 && this.selectedFlexiPage) {
+      const selectedFlexiPage = this.selectedFlexiPage;
       this.loadFields().then(() => {
+        if (selectedFlexiPage !== this.selectedFlexiPage) return;
         // Update default value fields with current values after loading
         this.updateDefaultValueFields();
       });
@@ -534,6 +589,8 @@ export default class FlexipageRecordFormCPE extends LightningElement {
 
   closeDefaultValuesModal() {
     this.showDefaultValuesModal = false;
+    this._focusModalOnRender = false;
+    this._focusReturnSelector = "[data-default-modal-trigger]";
     // Reset temp values
     this.tempDefaultValues = {};
     // Reset search term
@@ -616,6 +673,7 @@ export default class FlexipageRecordFormCPE extends LightningElement {
     }
 
     this.showExcludedFieldsModal = true;
+    this._focusModalOnRender = true;
     // Copy current excluded fields to temp array
     this.tempExcludedFields = [...this.excludedFields];
 
@@ -627,12 +685,41 @@ export default class FlexipageRecordFormCPE extends LightningElement {
 
   closeExcludedFieldsModal() {
     this.showExcludedFieldsModal = false;
+    this._focusModalOnRender = false;
+    this._focusReturnSelector = "[data-excluded-modal-trigger]";
     // Reset temp values
     this.tempExcludedFields = [];
   }
 
   handleTempExcludedFieldsChange(event) {
     this.tempExcludedFields = event.detail.value;
+  }
+
+  handleModalKeydown(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      if (this.showDefaultValuesModal) this.closeDefaultValuesModal();
+      if (this.showExcludedFieldsModal) this.closeExcludedFieldsModal();
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const controls = Array.from(
+      event.currentTarget.querySelectorAll(
+        "button, input, lightning-button, lightning-input, lightning-dual-listbox, c-fsc_flow-combobox"
+      )
+    ).filter((control) =>
+      !control.disabled && !control.closest('[aria-hidden="true"]')
+    );
+    if (controls.length === 0) return;
+    const active = this.template.activeElement || event.target;
+    if (event.shiftKey && active === controls[0]) {
+      event.preventDefault();
+      controls[controls.length - 1].focus();
+    } else if (!event.shiftKey && active === controls[controls.length - 1]) {
+      event.preventDefault();
+      controls[0].focus();
+    }
   }
 
   saveExcludedFields() {
@@ -644,37 +731,11 @@ export default class FlexipageRecordFormCPE extends LightningElement {
 
   // Helper methods
   parseDefaultValues(defaultValuesString) {
-    if (!defaultValuesString) {
-      this.defaultFieldValues = {};
-      return;
-    }
-
-    const values = {};
-    // Support both comma and semicolon separators
-    const pairs = defaultValuesString.split(/[,;]/);
-
-    pairs.forEach((pair) => {
-      const [field, value] = pair.split(":").map((s) => s.trim());
-      if (field && value) {
-        // Store the value directly - no {!} syntax in CPEs
-        // Flow will resolve variable references automatically
-        values[field] = value;
-      }
-    });
-
-    this.defaultFieldValues = values;
+    this.defaultFieldValues = parseDefaultValuePairs(defaultValuesString);
   }
 
   formatDefaultValuesString() {
-    const pairs = Object.entries(this.defaultFieldValues)
-      .filter(([, value]) => value)
-      .map(([field, value]) => {
-        // Format as field:value - Flow handles variable resolution
-        // No {!} syntax needed in CPEs
-        return `${field}:${value}`;
-      });
-
-    return pairs.join(",");
+    return formatDefaultValuePairs(this.defaultFieldValues);
   }
 
   handleGenericTypeMapping() {

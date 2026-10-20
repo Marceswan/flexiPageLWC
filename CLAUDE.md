@@ -10,7 +10,7 @@ FlexiPageRecordForm is a Salesforce Lightning Web Component suite that dynamical
 
 ```bash
 # Deploy specific LWC to default org
-sf project deploy start --source-dir force-app/main/default/lwc/flexiPageRecordForm
+sf project deploy start --source-dir force-app/main/default/lwc/flexipageRecordForm
 sf project deploy start --source-dir force-app/main/default/lwc/flexipageRecordFormCPE
 
 # Deploy Apex classes
@@ -47,7 +47,7 @@ npm run prettier
 
 ### Component Structure
 
-**flexipageRecordForm LWC** (`force-app/main/default/lwc/flexiPageRecordForm/`)
+**flexipageRecordForm LWC** (`force-app/main/default/lwc/flexipageRecordForm/`)
 - Main component for rendering dynamic forms from FlexiPage metadata
 - Supports targets: `lightning__RecordPage`, `lightning__FlowScreen`
 - Uses `NavigationMixin` for record navigation after save
@@ -110,7 +110,7 @@ npm run prettier
 - Core metadata service using session-based Metadata API calls
 - Handles FlexiPage metadata retrieval and parsing
 - Provides `getFlexiPageFields` and `getObjectFields` for CPE field selection
-- Uses `MetadataService` for HTTP callouts
+- Uses `FlexiPageMdApi` for HTTP callouts
 
 **FlexiPageCacheService** (`force-app/main/default/classes/FlexiPageCacheService.cls`)
 - Caching layer using `FlexiPage_Cache__c` custom object
@@ -122,7 +122,7 @@ npm run prettier
   - `invalidateCache(cacheKey)` - Clear specific cache entry
   - `invalidateAllCache()` - Clear all cached data
 
-**MetadataService** (`force-app/main/default/classes/MetadataService.cls`)
+**FlexiPageMdApi** (`force-app/main/default/classes/FlexiPageMdApi.cls`)
 - HTTP service for Salesforce Metadata API callouts
 - Session-based authentication
 
@@ -186,11 +186,11 @@ Supports `UiFormatSpecificationSet` for field styling:
 ```
 force-app/main/default/
 ├── lwc/
-│   ├── flexiPageRecordForm/          # Main component
-│   │   ├── flexiPageRecordForm.js
-│   │   ├── flexiPageRecordForm.html
-│   │   ├── flexiPageRecordForm.css
-│   │   ├── flexiPageRecordForm.js-meta.xml
+│   ├── flexipageRecordForm/          # Main component
+│   │   ├── flexipageRecordForm.js
+│   │   ├── flexipageRecordForm.html
+│   │   ├── flexipageRecordForm.css
+│   │   ├── flexipageRecordForm.js-meta.xml
 │   │   └── utils.js                  # FlexiPage JSON parser
 │   ├── flexipageRecordFormCPE/       # Flow Builder CPE
 │   │   ├── flexipageRecordFormCPE.js
@@ -212,8 +212,8 @@ force-app/main/default/
 │   ├── FlexiPageMetadataServiceTest.cls   # Test class
 │   ├── FlexiPageCacheService.cls          # Caching layer
 │   ├── FlexiPageCacheServiceTest.cls      # Test class
-│   ├── MetadataService.cls                # HTTP callout service
-│   └── MetadataServiceTest.cls            # Test class
+│   ├── FlexiPageMdApi.cls                # HTTP callout service
+│   └── FlexiPageMdApiTest.cls            # Test class
 ├── objects/
 │   └── FlexiPage_Cache__c/               # Cache custom object
 └── staticresources/

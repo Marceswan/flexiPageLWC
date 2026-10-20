@@ -193,6 +193,12 @@
         role="outputOnly"
       />
             <property
+        name="fieldsName"
+        type="String"
+        label="Fields Name"
+        description="Field names"
+      />
+            <property
         name="debugMode"
         type="Boolean"
         default="false"

@@ -580,6 +580,215 @@ public class FlexiPageCacheServiceTest {
   }
 
   /**
+   * @description Test a Named Credential request uses the callout: endpoint and no session
+   */
+  @isTest
+  static void testBuildToolingRequest_NamedCredential() {
+    HttpRequest req = FlexiPageCacheService.buildToolingRequest(
+      'SELECT Id FROM FlexiPage',
+      true
+    );
+
+    System.assert(
+      req.getEndpoint()
+        .startsWith('callout:Tooling_API_Credential/services/data/'),
+      'Should call out through the Named Credential'
+    );
+    System.assertEquals(
+      null,
+      req.getHeader('Authorization'),
+      'Named Credential should supply the auth header'
+    );
+  }
+
+  /**
+   * @description Test a session request calls the org domain with the user session
+   */
+  @isTest
+  static void testBuildToolingRequest_Session() {
+    HttpRequest req = FlexiPageCacheService.buildToolingRequest(
+      'SELECT Id FROM FlexiPage',
+      false
+    );
+
+    System.assert(
+      req.getEndpoint().startsWith(URL.getOrgDomainUrl().toExternalForm()),
+      'Should call the org domain directly'
+    );
+    System.assert(
+      req.getHeader('Authorization').startsWith('Bearer '),
+      'Should send the user session'
+    );
+  }
+
+  /**
+   * @description Test the session callout is used alone when it succeeds
+   */
+  @isTest
+  static void testSendToolingQuery_SessionSucceeds() {
+    FlexiPageCacheService.namedCredentialExists = true;
+    SessionThenNamedCredentialMock mock = new SessionThenNamedCredentialMock(
+      200,
+      false
+    );
+    Test.setMock(HttpCalloutMock.class, mock);
+
+    Test.startTest();
+    HttpResponse res = FlexiPageCacheService.sendToolingQuery(
+      'SELECT Id FROM FlexiPage'
+    );
+    Test.stopTest();
+
+    System.assertEquals(200, res.getStatusCode(), 'Should return the session response');
+    System.assertEquals(1, mock.endpoints.size(), 'Should not call the Named Credential');
+  }
+
+  /**
+   * @description Test a failed session callout retries through the Named Credential
+   */
+  @isTest
+  static void testSendToolingQuery_FallsBackOnHttpError() {
+    FlexiPageCacheService.namedCredentialExists = true;
+    SessionThenNamedCredentialMock mock = new SessionThenNamedCredentialMock(
+      403,
+      false
+    );
+    Test.setMock(HttpCalloutMock.class, mock);
+
+    Test.startTest();
+    HttpResponse res = FlexiPageCacheService.sendToolingQuery(
+      'SELECT Id FROM FlexiPage'
+    );
+    Test.stopTest();
+
+    System.assertEquals(200, res.getStatusCode(), 'Should return the Named Credential response');
+    System.assertEquals(2, mock.endpoints.size(), 'Should try the session first, then the Named Credential');
+    System.assert(
+      mock.endpoints[1].startsWith('callout:Tooling_API_Credential'),
+      'Second attempt should use the Named Credential'
+    );
+  }
+
+  /**
+   * @description Test a session callout exception retries through the Named Credential
+   */
+  @isTest
+  static void testSendToolingQuery_FallsBackOnException() {
+    FlexiPageCacheService.namedCredentialExists = true;
+    SessionThenNamedCredentialMock mock = new SessionThenNamedCredentialMock(
+      200,
+      true
+    );
+    Test.setMock(HttpCalloutMock.class, mock);
+
+    Test.startTest();
+    HttpResponse res = FlexiPageCacheService.sendToolingQuery(
+      'SELECT Id FROM FlexiPage'
+    );
+    Test.stopTest();
+
+    System.assertEquals(200, res.getStatusCode(), 'Should return the Named Credential response');
+    System.assertEquals(2, mock.endpoints.size(), 'Should retry through the Named Credential');
+  }
+
+  /**
+   * @description Test the session result is final when no Named Credential exists
+   */
+  @isTest
+  static void testSendToolingQuery_NoNamedCredential() {
+    FlexiPageCacheService.namedCredentialExists = false;
+    SessionThenNamedCredentialMock mock = new SessionThenNamedCredentialMock(
+      403,
+      false
+    );
+    Test.setMock(HttpCalloutMock.class, mock);
+
+    Test.startTest();
+    HttpResponse res = FlexiPageCacheService.sendToolingQuery(
+      'SELECT Id FROM FlexiPage'
+    );
+    Test.stopTest();
+
+    System.assertEquals(403, res.getStatusCode(), 'Should return the session response');
+    System.assertEquals(1, mock.endpoints.size(), 'Should not retry');
+  }
+
+  /**
+   * @description Test a session callout exception is rethrown when no Named Credential exists
+   */
+  @isTest
+  static void testSendToolingQuery_NoNamedCredentialException() {
+    FlexiPageCacheService.namedCredentialExists = false;
+    Test.setMock(
+      HttpCalloutMock.class,
+      new SessionThenNamedCredentialMock(200, true)
+    );
+
+    Boolean thrown = false;
+    Test.startTest();
+    try {
+      FlexiPageCacheService.sendToolingQuery('SELECT Id FROM FlexiPage');
+    } catch (CalloutException e) {
+      thrown = true;
+    }
+    Test.stopTest();
+
+    System.assert(thrown, 'Should rethrow the session callout exception');
+  }
+
+  /**
+   * @description Test the Named Credential lookup returns whether it exists
+   */
+  @isTest
+  static void testNamedCredentialExists_Lookup() {
+    FlexiPageCacheService.namedCredentialExists = null;
+
+    Boolean result = FlexiPageCacheService.namedCredentialExists;
+
+    System.assertEquals(
+      ![
+          SELECT Id
+          FROM NamedCredential
+          WHERE DeveloperName = 'Tooling_API_Credential'
+        ]
+        .isEmpty(),
+      result,
+      'Should match whether the Named Credential exists'
+    );
+  }
+
+  /**
+   * Mock that answers session callouts with a given status (or throws) and
+   * Named Credential callouts with 200, and records each endpoint called
+   */
+  public class SessionThenNamedCredentialMock implements HttpCalloutMock {
+    private Integer sessionStatus;
+    private Boolean sessionThrows;
+    public List<String> endpoints = new List<String>();
+
+    public SessionThenNamedCredentialMock(
+      Integer sessionStatus,
+      Boolean sessionThrows
+    ) {
+      this.sessionStatus = sessionStatus;
+      this.sessionThrows = sessionThrows;
+    }
+
+    public HTTPResponse respond(HTTPRequest req) {
+      endpoints.add(req.getEndpoint());
+      Boolean viaNamedCredential = req.getEndpoint().startsWith('callout:');
+      if (!viaNamedCredential && sessionThrows) {
+        throw new CalloutException('Unauthorized endpoint');
+      }
+      HttpResponse res = new HttpResponse();
+      res.setHeader('Content-Type', 'application/json');
+      res.setStatusCode(viaNamedCredential ? 200 : sessionStatus);
+      res.setBody('{"records":[]}');
+      return res;
+    }
+  }
+
+  /**
    * Mock HTTP Response Generator
    */
   public class MockHttpResponseGenerator implements HttpCalloutMock {

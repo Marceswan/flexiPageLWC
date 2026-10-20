@@ -377,7 +377,7 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertFlexiPageToMap_Direct() {
-    MetadataService.FlexiPage flexiPage = new MetadataService.FlexiPage();
+    FlexiPageMdApi.FlexiPage flexiPage = new FlexiPageMdApi.FlexiPage();
     flexiPage.fullName = 'Test_Page';
     flexiPage.masterLabel = 'Test Page';
     flexiPage.type_x = 'RecordPage';
@@ -385,12 +385,12 @@ private class FlexiPageMetadataServiceTest {
     flexiPage.description = 'Test';
 
     // With regions
-    MetadataService.FlexiPageRegion region = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region = new FlexiPageMdApi.FlexiPageRegion();
     region.name = 'main';
     region.type_x = 'Region';
     region.mode = 'Replace';
     region.componentInstances = null;
-    flexiPage.flexiPageRegions = new List<MetadataService.FlexiPageRegion>{ region };
+    flexiPage.flexiPageRegions = new List<FlexiPageMdApi.FlexiPageRegion>{ region };
 
     Test.startTest();
     Map<String, Object> result = FlexiPageMetadataService.convertFlexiPageToMap(flexiPage);
@@ -406,7 +406,7 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertFlexiPageToMap_NullRegions() {
-    MetadataService.FlexiPage flexiPage = new MetadataService.FlexiPage();
+    FlexiPageMdApi.FlexiPage flexiPage = new FlexiPageMdApi.FlexiPage();
     flexiPage.fullName = 'Empty_Page';
     flexiPage.masterLabel = 'Empty Page';
     flexiPage.type_x = 'RecordPage';
@@ -422,42 +422,42 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertFlexiPageRegionToMap_WithFieldItems() {
-    MetadataService.FlexiPageRegion region = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region = new FlexiPageMdApi.FlexiPageRegion();
     region.name = 'Section1';
     region.type_x = 'Region';
     region.mode = 'Replace';
 
     // Component with fieldItem property
-    MetadataService.ComponentInstance comp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance comp = new FlexiPageMdApi.ComponentInstance();
     comp.componentName = 'force:recordViewForm';
 
-    MetadataService.ComponentInstanceProperty fieldProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty fieldProp = new FlexiPageMdApi.ComponentInstanceProperty();
     fieldProp.name = 'fieldItem';
     fieldProp.value = 'Record.Name';
 
-    MetadataService.ComponentInstanceProperty uiBehaviorProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty uiBehaviorProp = new FlexiPageMdApi.ComponentInstanceProperty();
     uiBehaviorProp.name = 'uiBehavior';
     uiBehaviorProp.value = 'required';
 
-    MetadataService.ComponentInstanceProperty formatProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty formatProp = new FlexiPageMdApi.ComponentInstanceProperty();
     formatProp.name = 'conditionalFormatRuleset';
     formatProp.value = 'TestRuleset';
 
-    comp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{
+    comp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{
       fieldProp, uiBehaviorProp, formatProp
     };
 
     // Add visibility rule
-    MetadataService.UiFormulaRule visRule = new MetadataService.UiFormulaRule();
+    FlexiPageMdApi.UiFormulaRule visRule = new FlexiPageMdApi.UiFormulaRule();
     visRule.booleanFilter = '1';
-    MetadataService.UiFormulaCriterion crit = new MetadataService.UiFormulaCriterion();
+    FlexiPageMdApi.UiFormulaCriterion crit = new FlexiPageMdApi.UiFormulaCriterion();
     crit.leftValue = 'Type';
     crit.operator = 'equals';
     crit.rightValue = 'Customer';
-    visRule.criteria = new List<MetadataService.UiFormulaCriterion>{ crit };
+    visRule.criteria = new List<FlexiPageMdApi.UiFormulaCriterion>{ crit };
     comp.visibilityRule = visRule;
 
-    region.componentInstances = new List<MetadataService.ComponentInstance>{ comp };
+    region.componentInstances = new List<FlexiPageMdApi.ComponentInstance>{ comp };
 
     Test.startTest();
     Map<String, Object> result = FlexiPageMetadataService.convertFlexiPageRegionToMap(region);
@@ -478,7 +478,7 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertFlexiPageRegionToMap_NoComponents() {
-    MetadataService.FlexiPageRegion region = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region = new FlexiPageMdApi.FlexiPageRegion();
     region.name = 'EmptyRegion';
     region.type_x = 'Region';
     region.componentInstances = null;
@@ -493,14 +493,14 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertComponentInstanceToMap_FieldSection() {
-    MetadataService.ComponentInstance comp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance comp = new FlexiPageMdApi.ComponentInstance();
     comp.componentName = 'flexipage:fieldSection';
 
-    MetadataService.ComponentInstanceProperty fieldProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty fieldProp = new FlexiPageMdApi.ComponentInstanceProperty();
     fieldProp.name = 'fieldItem';
     fieldProp.value = 'Record.Phone';
 
-    comp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{ fieldProp };
+    comp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{ fieldProp };
 
     Test.startTest();
     Map<String, Object> result = FlexiPageMetadataService.convertComponentInstanceToMap(comp);
@@ -513,23 +513,23 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertComponentInstanceToMap_NonFieldSection() {
-    MetadataService.ComponentInstance comp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance comp = new FlexiPageMdApi.ComponentInstance();
     comp.componentName = 'force:recordData';
 
-    MetadataService.ComponentInstanceProperty prop = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty prop = new FlexiPageMdApi.ComponentInstanceProperty();
     prop.name = 'recordId';
     prop.value = '{!recordId}';
     prop.type_x = 'String';
 
     // Add actionNames property with null value to cover valueList path
-    MetadataService.ComponentInstanceProperty actionProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty actionProp = new FlexiPageMdApi.ComponentInstanceProperty();
     actionProp.name = 'actionNames';
     actionProp.value = null;
 
-    comp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{ prop, actionProp };
+    comp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{ prop, actionProp };
 
     // Add visibility rule
-    MetadataService.UiFormulaRule visRule = new MetadataService.UiFormulaRule();
+    FlexiPageMdApi.UiFormulaRule visRule = new FlexiPageMdApi.UiFormulaRule();
     visRule.booleanFilter = null;
     visRule.criteria = null;
     comp.visibilityRule = visRule;
@@ -545,20 +545,20 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertUiFormulaRuleToMap_Direct() {
-    MetadataService.UiFormulaRule rule = new MetadataService.UiFormulaRule();
+    FlexiPageMdApi.UiFormulaRule rule = new FlexiPageMdApi.UiFormulaRule();
     rule.booleanFilter = '1 AND 2';
 
-    MetadataService.UiFormulaCriterion crit1 = new MetadataService.UiFormulaCriterion();
+    FlexiPageMdApi.UiFormulaCriterion crit1 = new FlexiPageMdApi.UiFormulaCriterion();
     crit1.leftValue = 'Type';
     crit1.operator = 'equals';
     crit1.rightValue = 'Customer';
 
-    MetadataService.UiFormulaCriterion crit2 = new MetadataService.UiFormulaCriterion();
+    FlexiPageMdApi.UiFormulaCriterion crit2 = new FlexiPageMdApi.UiFormulaCriterion();
     crit2.leftValue = 'Status';
     crit2.operator = 'notEqual';
     crit2.rightValue = 'Closed';
 
-    rule.criteria = new List<MetadataService.UiFormulaCriterion>{ crit1, crit2 };
+    rule.criteria = new List<FlexiPageMdApi.UiFormulaCriterion>{ crit1, crit2 };
 
     Test.startTest();
     Map<String, Object> result = FlexiPageMetadataService.convertUiFormulaRuleToMap(rule);
@@ -571,7 +571,7 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertUiFormulaRuleToMap_NullFields() {
-    MetadataService.UiFormulaRule rule = new MetadataService.UiFormulaRule();
+    FlexiPageMdApi.UiFormulaRule rule = new FlexiPageMdApi.UiFormulaRule();
     rule.booleanFilter = null;
     rule.criteria = null;
 
@@ -739,7 +739,7 @@ private class FlexiPageMetadataServiceTest {
   @isTest
   static void testCreateMetadataService_Direct() {
     Test.startTest();
-    MetadataService.MetadataPort service = FlexiPageMetadataService.createMetadataService();
+    FlexiPageMdApi.MetadataPort service = FlexiPageMetadataService.createMetadataService();
     Test.stopTest();
 
     System.assertNotEquals(null, service, 'Service should not be null');
@@ -763,7 +763,7 @@ private class FlexiPageMetadataServiceTest {
   @isTest
   static void testRetrieveFlexiPageViaMetadataAPI_SuccessWithMock() {
     // Build mock FlexiPage with regions, components, and properties
-    MetadataService.FlexiPage flexiPage = new MetadataService.FlexiPage();
+    FlexiPageMdApi.FlexiPage flexiPage = new FlexiPageMdApi.FlexiPage();
     flexiPage.fullName = 'Test_FlexiPage';
     flexiPage.type_x = 'RecordPage';
     flexiPage.masterLabel = 'Test FlexiPage';
@@ -771,24 +771,24 @@ private class FlexiPageMetadataServiceTest {
     flexiPage.description = 'Test description';
 
     // Create a region with a field section component
-    MetadataService.FlexiPageRegion region = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region = new FlexiPageMdApi.FlexiPageRegion();
     region.name = 'MainRegion';
     region.type_x = 'Region';
 
-    MetadataService.ComponentInstance comp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance comp = new FlexiPageMdApi.ComponentInstance();
     comp.componentName = 'flexipage:fieldSection';
 
-    MetadataService.ComponentInstanceProperty prop = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty prop = new FlexiPageMdApi.ComponentInstanceProperty();
     prop.name = 'fieldItem';
     prop.value = 'Account.Name';
 
-    comp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{ prop };
-    region.componentInstances = new List<MetadataService.ComponentInstance>{ comp };
-    flexiPage.flexiPageRegions = new List<MetadataService.FlexiPageRegion>{ region };
+    comp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{ prop };
+    region.componentInstances = new List<FlexiPageMdApi.ComponentInstance>{ comp };
+    flexiPage.flexiPageRegions = new List<FlexiPageMdApi.FlexiPageRegion>{ region };
 
     // Create mock ReadResult
-    MetadataService.ReadFlexiPageResult readResult = new MetadataService.ReadFlexiPageResult();
-    readResult.records = new List<MetadataService.FlexiPage>{ flexiPage };
+    FlexiPageMdApi.ReadFlexiPageResult readResult = new FlexiPageMdApi.ReadFlexiPageResult();
+    readResult.records = new List<FlexiPageMdApi.FlexiPage>{ flexiPage };
 
     FlexiPageMetadataService.mockReadResult = readResult;
 
@@ -806,8 +806,8 @@ private class FlexiPageMetadataServiceTest {
   @isTest
   static void testRetrieveFlexiPageViaMetadataAPI_NotFound() {
     // Create mock ReadResult with empty records
-    MetadataService.ReadFlexiPageResult readResult = new MetadataService.ReadFlexiPageResult();
-    readResult.records = new List<MetadataService.FlexiPage>();
+    FlexiPageMdApi.ReadFlexiPageResult readResult = new FlexiPageMdApi.ReadFlexiPageResult();
+    readResult.records = new List<FlexiPageMdApi.FlexiPage>();
 
     FlexiPageMetadataService.mockReadResult = readResult;
 
@@ -825,7 +825,7 @@ private class FlexiPageMetadataServiceTest {
   @isTest
   static void testRetrieveFlexiPageViaMetadataAPI_NullRecords() {
     // Create mock ReadResult with null records
-    MetadataService.ReadFlexiPageResult readResult = new MetadataService.ReadFlexiPageResult();
+    FlexiPageMdApi.ReadFlexiPageResult readResult = new FlexiPageMdApi.ReadFlexiPageResult();
     readResult.records = null;
 
     FlexiPageMetadataService.mockReadResult = readResult;
@@ -843,48 +843,48 @@ private class FlexiPageMetadataServiceTest {
   @isTest
   static void testRetrieveFlexiPageViaMetadataAPI_MultipleRegionsAndComponents() {
     // Build FlexiPage with multiple regions and components for detailed coverage
-    MetadataService.FlexiPage flexiPage = new MetadataService.FlexiPage();
+    FlexiPageMdApi.FlexiPage flexiPage = new FlexiPageMdApi.FlexiPage();
     flexiPage.fullName = 'Detailed_Page';
     flexiPage.type_x = 'RecordPage';
     flexiPage.masterLabel = 'Detailed Page';
     flexiPage.sobjectType = 'Account';
 
     // Region 1 with multiple components including field sections and regular components
-    MetadataService.FlexiPageRegion region1 = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region1 = new FlexiPageMdApi.FlexiPageRegion();
     region1.name = 'Region1';
     region1.type_x = 'Region';
 
     // Field section component with properties
-    MetadataService.ComponentInstance fieldComp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance fieldComp = new FlexiPageMdApi.ComponentInstance();
     fieldComp.componentName = 'flexipage:fieldSection';
-    MetadataService.ComponentInstanceProperty fieldProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty fieldProp = new FlexiPageMdApi.ComponentInstanceProperty();
     fieldProp.name = 'fieldItem';
     fieldProp.value = 'Account.Industry';
-    MetadataService.ComponentInstanceProperty behaviorProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty behaviorProp = new FlexiPageMdApi.ComponentInstanceProperty();
     behaviorProp.name = 'uiBehavior';
     behaviorProp.value = 'readonly';
-    fieldComp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{ fieldProp, behaviorProp };
+    fieldComp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{ fieldProp, behaviorProp };
 
     // Regular (non-field) component
-    MetadataService.ComponentInstance regularComp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance regularComp = new FlexiPageMdApi.ComponentInstance();
     regularComp.componentName = 'flexipage:chart';
-    MetadataService.ComponentInstanceProperty chartProp = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty chartProp = new FlexiPageMdApi.ComponentInstanceProperty();
     chartProp.name = 'chartType';
     chartProp.value = 'bar';
-    regularComp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{ chartProp };
+    regularComp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{ chartProp };
 
-    region1.componentInstances = new List<MetadataService.ComponentInstance>{ fieldComp, regularComp };
+    region1.componentInstances = new List<FlexiPageMdApi.ComponentInstance>{ fieldComp, regularComp };
 
     // Region 2 - empty region
-    MetadataService.FlexiPageRegion region2 = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region2 = new FlexiPageMdApi.FlexiPageRegion();
     region2.name = 'Region2';
     region2.type_x = 'Facet';
     region2.componentInstances = null;
 
-    flexiPage.flexiPageRegions = new List<MetadataService.FlexiPageRegion>{ region1, region2 };
+    flexiPage.flexiPageRegions = new List<FlexiPageMdApi.FlexiPageRegion>{ region1, region2 };
 
-    MetadataService.ReadFlexiPageResult readResult = new MetadataService.ReadFlexiPageResult();
-    readResult.records = new List<MetadataService.FlexiPage>{ flexiPage };
+    FlexiPageMdApi.ReadFlexiPageResult readResult = new FlexiPageMdApi.ReadFlexiPageResult();
+    readResult.records = new List<FlexiPageMdApi.FlexiPage>{ flexiPage };
 
     FlexiPageMetadataService.mockReadResult = readResult;
 
@@ -1119,23 +1119,23 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertFlexiPageRegionToMap_FieldSectionWithRecordRef() {
-    MetadataService.FlexiPageRegion region = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region = new FlexiPageMdApi.FlexiPageRegion();
     region.name = 'FieldSectionRegion';
     region.type_x = 'Region';
 
-    MetadataService.ComponentInstance comp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance comp = new FlexiPageMdApi.ComponentInstance();
     comp.componentName = 'flexipage:fieldSection';
 
-    MetadataService.ComponentInstanceProperty prop1 = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty prop1 = new FlexiPageMdApi.ComponentInstanceProperty();
     prop1.name = 'fieldItem';
     prop1.value = 'Record.Industry';
 
-    MetadataService.ComponentInstanceProperty prop2 = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty prop2 = new FlexiPageMdApi.ComponentInstanceProperty();
     prop2.name = 'sectionLabel';
     prop2.value = 'Details';
 
-    comp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{ prop1, prop2 };
-    region.componentInstances = new List<MetadataService.ComponentInstance>{ comp };
+    comp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{ prop1, prop2 };
+    region.componentInstances = new List<FlexiPageMdApi.ComponentInstance>{ comp };
 
     Test.startTest();
     Map<String, Object> result = FlexiPageMetadataService.convertFlexiPageRegionToMap(region);
@@ -1149,12 +1149,62 @@ private class FlexiPageMetadataServiceTest {
   @isTest
   static void testGetFlexiPagesViaMetadataAPI_Direct() {
     Test.startTest();
-    // This will use MetadataService internally, which may fail in test context
+    // This will use FlexiPageMdApi internally, which may fail in test context
     // The method handles exceptions gracefully by returning empty list
     List<Map<String, Object>> result = FlexiPageMetadataService.getFlexiPagesViaMetadataAPI('Account');
     Test.stopTest();
 
     System.assertNotEquals(null, result, 'Result should not be null');
+  }
+
+  private class ListMetadataMock implements WebServiceMock {
+    public void doInvoke(
+      Object stub,
+      Object request,
+      Map<String, Object> response,
+      String endpoint,
+      String soapAction,
+      String requestName,
+      String responseNS,
+      String responseName,
+      String responseType
+    ) {
+      FlexiPageMdApi.FileProperties accountPage = new FlexiPageMdApi.FileProperties();
+      accountPage.fullName = 'Account_Record_Page';
+      FlexiPageMdApi.FileProperties contactPage = new FlexiPageMdApi.FileProperties();
+      contactPage.fullName = 'Contact_Record_Page';
+
+      FlexiPageMdApi.listMetadataResponse_element responseElement = new FlexiPageMdApi.listMetadataResponse_element();
+      responseElement.result = new List<FlexiPageMdApi.FileProperties>{
+        accountPage,
+        contactPage
+      };
+      response.put('response_x', responseElement);
+    }
+  }
+
+  @isTest
+  static void testGetFlexiPagesViaMetadataAPI_FiltersByObject() {
+    Test.setMock(WebServiceMock.class, new ListMetadataMock());
+
+    Test.startTest();
+    List<Map<String, Object>> result = FlexiPageMetadataService.getFlexiPagesViaMetadataAPI('Account');
+    Test.stopTest();
+
+    System.assertEquals(1, result.size(), 'Only the Account page should match');
+    System.assertEquals('Account_Record_Page', result[0].get('developerName'), 'Developer name should match');
+    System.assertEquals('Account Record Page', result[0].get('label'), 'Label should replace underscores');
+  }
+
+  @isTest
+  static void testGetFlexiPagesViaMetadataAPI_NoMatch() {
+    Test.setMock(WebServiceMock.class, new ListMetadataMock());
+
+    Test.startTest();
+    List<Map<String, Object>> result = FlexiPageMetadataService.getFlexiPagesViaMetadataAPI('Opportunity');
+    Test.stopTest();
+
+    System.assertEquals(0, result.size(), 'No page should match');
   }
 
   // ===== Comparator direct tests for null-first edge cases =====
@@ -1205,29 +1255,29 @@ private class FlexiPageMetadataServiceTest {
 
   @isTest
   static void testConvertFlexiPageRegionToMap_FieldWithVisibilityRule() {
-    MetadataService.FlexiPageRegion region = new MetadataService.FlexiPageRegion();
+    FlexiPageMdApi.FlexiPageRegion region = new FlexiPageMdApi.FlexiPageRegion();
     region.name = 'VisibilityRegion';
     region.type_x = 'Region';
 
-    MetadataService.ComponentInstance comp = new MetadataService.ComponentInstance();
+    FlexiPageMdApi.ComponentInstance comp = new FlexiPageMdApi.ComponentInstance();
     comp.componentName = 'flexipage:fieldSection';
 
-    MetadataService.ComponentInstanceProperty prop = new MetadataService.ComponentInstanceProperty();
+    FlexiPageMdApi.ComponentInstanceProperty prop = new FlexiPageMdApi.ComponentInstanceProperty();
     prop.name = 'fieldItem';
     prop.value = 'Account.Status__c';
-    comp.componentInstanceProperties = new List<MetadataService.ComponentInstanceProperty>{ prop };
+    comp.componentInstanceProperties = new List<FlexiPageMdApi.ComponentInstanceProperty>{ prop };
 
     // Add visibility rule
-    MetadataService.UiFormulaRule visRule = new MetadataService.UiFormulaRule();
+    FlexiPageMdApi.UiFormulaRule visRule = new FlexiPageMdApi.UiFormulaRule();
     visRule.booleanFilter = '1';
-    MetadataService.UiFormulaCriterion criterion = new MetadataService.UiFormulaCriterion();
+    FlexiPageMdApi.UiFormulaCriterion criterion = new FlexiPageMdApi.UiFormulaCriterion();
     criterion.leftValue = '{!Record.Industry}';
     criterion.operator = 'EQUAL';
     criterion.rightValue = 'Technology';
-    visRule.criteria = new List<MetadataService.UiFormulaCriterion>{ criterion };
+    visRule.criteria = new List<FlexiPageMdApi.UiFormulaCriterion>{ criterion };
     comp.visibilityRule = visRule;
 
-    region.componentInstances = new List<MetadataService.ComponentInstance>{ comp };
+    region.componentInstances = new List<FlexiPageMdApi.ComponentInstance>{ comp };
 
     Test.startTest();
     Map<String, Object> result = FlexiPageMetadataService.convertFlexiPageRegionToMap(region);
